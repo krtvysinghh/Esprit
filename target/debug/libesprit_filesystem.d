@@ -1,1 +1,1 @@
-/Users/krtvysingh/Projects/Esprit/target/debug/libesprit_filesystem.rlib: /Users/krtvysingh/Projects/Esprit/crates/esprit-filesystem/src/lib.rs
+/Users/krtvysingh/Projects/Esprit/target/debug/libesprit_filesystem.rlib: /Users/krtvysingh/Projects/Esprit/crates/esprit-filesystem/src/lib.rs /Users/krtvysingh/Projects/Esprit/crates/esprit-filesystem/src/stats.rs

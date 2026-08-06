@@ -1,12 +1,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use indicatif::{ProgressBar, ProgressStyle};
-use owo_colors::OwoColorize;
-use std::time::Duration;
-use sysinfo::System;
 
 #[derive(Parser)]
-#[command(name = "esprit", version)]
+#[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -14,32 +10,15 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    Doctor,
-
     Version,
 
-    Search {
-        pattern: String,
+    Doctor,
 
-        #[arg(short, long)]
-        content: bool,
-    },
+    Search { pattern: String },
 
-    Organize {
-        folder: String,
-    },
-}
+    Organize { folder: String },
 
-fn spinner(msg: &str) -> ProgressBar {
-    let pb = ProgressBar::new_spinner();
-
-    pb.enable_steady_tick(Duration::from_millis(70));
-
-    pb.set_style(ProgressStyle::with_template("{spinner:.green} {msg}").unwrap());
-
-    pb.set_message(msg.to_string());
-
-    pb
+    Stats { folder: String },
 }
 
 fn main() -> Result<()> {
@@ -51,52 +30,45 @@ fn main() -> Result<()> {
         }
 
         Command::Doctor => {
-            let mut s = System::new_all();
-
-            s.refresh_all();
-
-            println!("{}", "Esprit Doctor".green().bold());
-
-            println!("CPU : {}", s.cpus().len());
-
-            println!("RAM : {} MB", s.total_memory() / 1024 / 1024);
-
-            println!("Model : {}", esprit_ai::model());
+            println!("Platform : {:?}", esprit_platform::current());
+            println!("Model    : {}", esprit_ai::model());
+            println!(
+                "Workspace: {:?}",
+                esprit_config::Config::default().workspace
+            );
         }
 
-        Command::Search { pattern, content } => {
-            let pb = spinner("Searching");
+        Command::Search { pattern } => {
+            let files = esprit_search::search(&pattern, ".");
 
-            if content {
-                let hits = esprit_search::search_contents(&pattern, ".");
+            println!("{} matches\n", files.len());
 
-                pb.finish_and_clear();
-
-                println!("{} matches\n", hits.len());
-
-                for (file, line, text) in hits {
-                    println!(
-                        "{}:{} {}",
-                        file.display().to_string().cyan(),
-                        line.to_string().yellow(),
-                        text.trim()
-                    );
-                }
-            } else {
-                let files = esprit_search::search(&pattern, ".");
-
-                pb.finish_and_clear();
-
-                println!("{} files\n", files.len());
-
-                for f in files {
-                    println!("{}", f.display());
-                }
+            for file in files {
+                println!("{}", file.display());
             }
         }
 
         Command::Organize { folder } => {
             esprit_filesystem::organize(folder)?;
+        }
+
+        Command::Stats { folder } => {
+            let stats = esprit_filesystem::stats::FolderStats::scan(folder)?;
+
+            println!();
+            println!("Files       : {}", stats.files);
+            println!("Directories : {}", stats.directories);
+            println!("Size        : {} bytes", stats.bytes);
+
+            println!("\nExtensions");
+
+            let mut exts: Vec<_> = stats.extensions.into_iter().collect();
+
+            exts.sort_by(|a, b| b.1.cmp(&a.1));
+
+            for (ext, count) in exts {
+                println!("{:>8} : {}", ext, count);
+            }
         }
     }
 

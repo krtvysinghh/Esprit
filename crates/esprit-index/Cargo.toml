@@ -1,0 +1,8 @@
+[package]
+name = "esprit-index"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+walkdir.workspace = true

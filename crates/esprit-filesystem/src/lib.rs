@@ -1,3 +1,5 @@
+pub mod stats;
+
 use anyhow::Result;
 use std::{
     fs,
@@ -21,19 +23,19 @@ fn unique_path(dir: &Path, file: &Path) -> PathBuf {
         .map(|e| format!(".{}", e.to_string_lossy()))
         .unwrap_or_default();
 
-    let mut candidate = dir.join(file.file_name().unwrap());
+    let mut target = dir.join(file.file_name().unwrap());
 
-    if !candidate.exists() {
-        return candidate;
+    if !target.exists() {
+        return target;
     }
 
     let mut i = 1;
 
     loop {
-        candidate = dir.join(format!("{stem} ({i}){ext}"));
+        target = dir.join(format!("{stem} ({i}){ext}"));
 
-        if !candidate.exists() {
-            return candidate;
+        if !target.exists() {
+            return target;
         }
 
         i += 1;
@@ -43,7 +45,7 @@ fn unique_path(dir: &Path, file: &Path) -> PathBuf {
 pub fn organize(root: impl AsRef<Path>) -> Result<()> {
     let root = root.as_ref();
 
-    let categories: &[(&str, &[&str])] = &[
+    let groups: &[(&str, &[&str])] = &[
         ("Images", IMAGES),
         ("Videos", VIDEOS),
         ("Documents", DOCUMENTS),
@@ -51,8 +53,6 @@ pub fn organize(root: impl AsRef<Path>) -> Result<()> {
         ("Audio", AUDIO),
         ("Code", CODE),
     ];
-
-    let mut moved = 0usize;
 
     for entry in fs::read_dir(root)? {
         let entry = entry?;
@@ -68,24 +68,16 @@ pub fn organize(root: impl AsRef<Path>) -> Result<()> {
             .unwrap_or("")
             .to_ascii_lowercase();
 
-        for (folder, list) in categories {
-            if list.contains(&ext.as_str()) {
+        for (folder, exts) in groups {
+            if exts.contains(&ext.as_str()) {
                 let dst = root.join(folder);
-
                 fs::create_dir_all(&dst)?;
-
                 let target = unique_path(&dst, &path);
-
                 fs::rename(&path, target)?;
-
-                moved += 1;
-
                 break;
             }
         }
     }
-
-    println!("Moved {moved} files.");
 
     Ok(())
 }

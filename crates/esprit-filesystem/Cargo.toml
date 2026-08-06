@@ -5,3 +5,5 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+walkdir.workspace = true
+sha2 = "0.11"
