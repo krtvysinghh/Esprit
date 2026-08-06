@@ -11,7 +11,8 @@ struct Cli {
 enum Command {
     Version,
     Doctor,
-    Search { query: String },
+
+    Search { pattern: String },
 }
 
 fn main() {
@@ -27,12 +28,16 @@ fn main() {
             println!("Model    : {}", esprit_ai::model());
             println!(
                 "Workspace: {:?}",
-                esprit_config::Config::default().workspace
+                (esprit_config::Config::default().workspace)
             );
         }
 
-        Command::Search { query } => {
-            for file in esprit_search::find(&query, ".") {
+        Command::Search { pattern } => {
+            let files = esprit_search::search(&pattern, ".");
+
+            println!("Found {} matches\n", files.len());
+
+            for file in files {
                 println!("{}", file.display());
             }
         }
