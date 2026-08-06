@@ -2,7 +2,7 @@ use clap::Parser;
 
 use esprit_builder::{
     cli::{Cli, Command},
-    generator::{workspace::WorkspaceGenerator, Generator},
+    generator::{Generator, workspace::WorkspaceGenerator},
     logging,
 };
 
