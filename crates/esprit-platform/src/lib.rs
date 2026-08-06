@@ -1,21 +1,21 @@
-#[derive(Debug, Clone, Copy)]
-pub enum Platform {
-    MacOS,
-    Linux,
-    Windows,
-    Unknown,
+use sysinfo::System;
+
+#[derive(Debug)]
+pub struct PlatformInfo {
+    pub os: String,
+    pub cpu_cores: usize,
+    pub memory_gb: f64,
 }
 
-pub fn current() -> Platform {
-    #[cfg(target_os = "macos")]
-    return Platform::MacOS;
+pub fn current() -> PlatformInfo {
+    let mut system = System::new_all();
+    system.refresh_all();
 
-    #[cfg(target_os = "linux")]
-    return Platform::Linux;
+    let os = System::name().unwrap_or_else(|| "Unknown".to_string());
 
-    #[cfg(target_os = "windows")]
-    return Platform::Windows;
+    let cpu_cores = system.cpus().len();
 
-    #[allow(unreachable_code)]
-    Platform::Unknown
+    let memory_gb = system.total_memory() as f64 / 1024.0 / 1024.0 / 1024.0;
+
+    PlatformInfo { os, cpu_cores, memory_gb }
 }
