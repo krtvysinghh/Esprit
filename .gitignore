@@ -8,3 +8,4 @@ target/
 coverage/
 .idea/
 .vscode/
+.esprit/
