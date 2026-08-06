@@ -2,7 +2,7 @@ use clap::Parser;
 
 use esprit_builder::{
     cli::{Cli, Command},
-    generator::{Generator, workspace::WorkspaceGenerator},
+    generator::{Generator, crate_generator::CrateGenerator, workspace::WorkspaceGenerator},
     logging,
 };
 
@@ -14,16 +14,19 @@ fn main() -> anyhow::Result<()> {
     match cli.command {
         Command::Init => {
             WorkspaceGenerator.generate()?;
-            println!("Workspace initialized.");
         }
 
         Command::Doctor => {
-            println!("Diagnostics OK");
+            println!("OK");
         }
 
-        Command::New { kind, name } => {
-            println!("{kind}: {name}");
-        }
+        Command::New { kind, name } => match kind.as_str() {
+            "crate" => {
+                CrateGenerator { name }.generate()?;
+            }
+
+            _ => println!("Unknown generator"),
+        },
     }
 
     Ok(())
