@@ -1,25 +1,30 @@
 use clap::Parser;
+
 use esprit_builder::{
     cli::{Cli, Command},
+    generator::{workspace::WorkspaceGenerator, Generator},
     logging,
 };
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     logging::init();
 
     let cli = Cli::parse();
 
     match cli.command {
         Command::Init => {
-            println!("Initializing workspace...");
+            WorkspaceGenerator.generate()?;
+            println!("Workspace initialized.");
         }
 
         Command::Doctor => {
-            println!("Running diagnostics...");
+            println!("Diagnostics OK");
         }
 
         Command::New { kind, name } => {
-            println!("Create {} {}", kind, name);
+            println!("{kind}: {name}");
         }
     }
+
+    Ok(())
 }

@@ -1,12 +1,3 @@
-use camino::Utf8PathBuf;
+pub mod types;
 
-#[derive(Debug, Clone)]
-pub struct Project {
-    pub root: Utf8PathBuf,
-}
-
-impl Project {
-    pub fn new(root: Utf8PathBuf) -> Self {
-        Self { root }
-    }
-}
+pub use types::Project;
