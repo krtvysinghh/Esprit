@@ -16,3 +16,4 @@ esprit-core = { path = "../../crates/esprit-core" }
 esprit-config = { path = "../../crates/esprit-config" }
 esprit-platform = { path = "../../crates/esprit-platform" }
 esprit-search = { path = "../../crates/esprit-search" }
+esprit-filesystem = { path = "../../crates/esprit-filesystem" }

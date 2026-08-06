@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use esprit_filesystem::stats::FolderStats;
 use esprit_search::{SearchEngine, SearchOptions};
 use std::path::PathBuf;
 
@@ -14,11 +15,16 @@ struct Cli {
 enum Commands {
     Doctor,
     Version,
+
     Search {
         pattern: String,
 
         #[arg(long)]
         regex: bool,
+    },
+
+    Stats {
+        folder: String,
     },
 }
 
@@ -32,7 +38,6 @@ fn main() -> Result<()> {
             let report = esprit_platform::doctor();
 
             println!("{}", esprit_core::banner());
-
             println!("Operating System : {}", report.os);
             println!("Kernel           : {}", report.kernel);
             println!("Hostname         : {}", report.hostname);
@@ -56,6 +61,23 @@ fn main() -> Result<()> {
 
             for result in results {
                 println!("{}", result.path.display());
+            }
+        }
+
+        Commands::Stats { folder } => {
+            let stats = FolderStats::scan(folder)?;
+
+            println!("Files       : {}", stats.files);
+            println!("Directories : {}", stats.directories);
+            println!("Size        : {} bytes", stats.bytes);
+
+            println!("\nExtensions:");
+
+            let mut exts: Vec<_> = stats.extensions.into_iter().collect();
+            exts.sort_by(|a, b| b.1.cmp(&a.1));
+
+            for (ext, count) in exts {
+                println!("{:>8} {}", ext, count);
             }
         }
     }
