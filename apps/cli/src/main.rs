@@ -6,7 +6,7 @@ use std::time::Duration;
 use sysinfo::System;
 
 #[derive(Parser)]
-#[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
+#[command(name = "esprit", version)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -14,67 +14,32 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    Version,
-
     Doctor,
 
-    Search { pattern: String },
+    Version,
 
-    Organize { folder: String },
+    Search {
+        pattern: String,
+
+        #[arg(short, long)]
+        content: bool,
+    },
+
+    Organize {
+        folder: String,
+    },
 }
 
-fn doctor() {
-    let mut sys = System::new_all();
-    sys.refresh_all();
+fn spinner(msg: &str) -> ProgressBar {
+    let pb = ProgressBar::new_spinner();
 
-    println!();
-    println!("{}", "Esprit Doctor".bright_blue().bold());
-    println!("{}", "────────────────────────────".bright_black());
+    pb.enable_steady_tick(Duration::from_millis(70));
 
-    println!("Platform   : {:?}", esprit_platform::current());
-    println!("CPU Cores  : {}", sys.cpus().len());
-    println!("Memory     : {} MB", sys.total_memory() / 1024 / 1024);
-    println!("AI Model   : {}", esprit_ai::model());
-    println!(
-        "Workspace  : {:?}",
-        esprit_config::Config::default().workspace
-    );
+    pb.set_style(ProgressStyle::with_template("{spinner:.green} {msg}").unwrap());
 
-    println!();
-    println!("{}", "Status".green().bold());
-    println!("{} Workspace", "✓".green());
-    println!("{} CLI", "✓".green());
-    println!("{} Config", "✓".green());
-    println!("{} Search", "✓".green());
-    println!("{} Filesystem", "✓".green());
-}
+    pb.set_message(msg.to_string());
 
-fn search(pattern: String) {
-    let spinner = ProgressBar::new_spinner();
-
-    spinner.set_style(ProgressStyle::with_template("{spinner:.green} {msg}").unwrap());
-
-    spinner.enable_steady_tick(Duration::from_millis(80));
-
-    spinner.set_message("Searching...");
-
-    let files = esprit_search::search(&pattern, ".");
-
-    spinner.finish_and_clear();
-
-    println!("\n{} {} matches\n", "Found".green().bold(), files.len());
-
-    for file in files {
-        println!("{}", file.display());
-    }
-}
-
-fn organize(folder: String) -> Result<()> {
-    esprit_filesystem::organize(folder)?;
-
-    println!("\n{} Files organized successfully.", "✓".green().bold());
-
-    Ok(())
+    pb
 }
 
 fn main() -> Result<()> {
@@ -85,14 +50,53 @@ fn main() -> Result<()> {
             println!("{}", esprit_core::banner());
         }
 
-        Command::Doctor => doctor(),
+        Command::Doctor => {
+            let mut s = System::new_all();
 
-        Command::Search { pattern } => {
-            search(pattern);
+            s.refresh_all();
+
+            println!("{}", "Esprit Doctor".green().bold());
+
+            println!("CPU : {}", s.cpus().len());
+
+            println!("RAM : {} MB", s.total_memory() / 1024 / 1024);
+
+            println!("Model : {}", esprit_ai::model());
+        }
+
+        Command::Search { pattern, content } => {
+            let pb = spinner("Searching");
+
+            if content {
+                let hits = esprit_search::search_contents(&pattern, ".");
+
+                pb.finish_and_clear();
+
+                println!("{} matches\n", hits.len());
+
+                for (file, line, text) in hits {
+                    println!(
+                        "{}:{} {}",
+                        file.display().to_string().cyan(),
+                        line.to_string().yellow(),
+                        text.trim()
+                    );
+                }
+            } else {
+                let files = esprit_search::search(&pattern, ".");
+
+                pb.finish_and_clear();
+
+                println!("{} files\n", files.len());
+
+                for f in files {
+                    println!("{}", f.display());
+                }
+            }
         }
 
         Command::Organize { folder } => {
-            organize(folder)?;
+            esprit_filesystem::organize(folder)?;
         }
     }
 
