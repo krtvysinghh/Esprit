@@ -7,11 +7,11 @@ use std::path::PathBuf;
 #[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
 struct Cli {
     #[command(subcommand)]
-    command: Command,
+    command: Commands,
 }
 
 #[derive(Subcommand)]
-enum Command {
+enum Commands {
     Doctor,
     Version,
     Search {
@@ -22,39 +22,42 @@ enum Command {
     },
 }
 
-fn doctor() -> Result<()> {
-    println!("{}", esprit_core::banner());
-
-    let cfg = esprit_config::Config::load()?;
-
-    println!("Platform : {:?}", esprit_platform::current());
-    println!("AI Model : {}", cfg.ai_model);
-    println!("Workspace: {}", cfg.workspace.display());
-
-    Ok(())
-}
-
-fn version() {
-    println!("{}", esprit_core::VERSION);
-}
-
-fn search(pattern: String, regex: bool) -> Result<()> {
-    let results = SearchEngine::run(SearchOptions { root: PathBuf::from("."), pattern, regex })?;
-
-    println!("{} match(es)\n", results.len());
-
-    for result in results {
-        println!("{}", result.path.display());
-    }
-
-    Ok(())
-}
-
 fn main() -> Result<()> {
     match Cli::parse().command {
-        Command::Doctor => doctor()?,
-        Command::Version => version(),
-        Command::Search { pattern, regex } => search(pattern, regex)?,
+        Commands::Version => {
+            println!("{}", esprit_core::banner());
+        }
+
+        Commands::Doctor => {
+            let report = esprit_platform::doctor();
+
+            println!("{}", esprit_core::banner());
+
+            println!("Operating System : {}", report.os);
+            println!("Kernel           : {}", report.kernel);
+            println!("Hostname         : {}", report.hostname);
+            println!("CPU              : {}", report.cpu);
+            println!("CPU Cores        : {}", report.cpu_cores);
+            println!("Memory (GB)      : {:.2}", report.ram_gb);
+
+            println!();
+            println!("Development Tools");
+            println!("Rust   : {}", if report.rust { "✓" } else { "✗" });
+            println!("Cargo  : {}", if report.cargo { "✓" } else { "✗" });
+            println!("Git    : {}", if report.git { "✓" } else { "✗" });
+            println!("Ollama : {}", if report.ollama { "✓" } else { "✗" });
+        }
+
+        Commands::Search { pattern, regex } => {
+            let results =
+                SearchEngine::run(SearchOptions { root: PathBuf::from("."), pattern, regex })?;
+
+            println!("Found {} matches\n", results.len());
+
+            for result in results {
+                println!("{}", result.path.display());
+            }
+        }
     }
 
     Ok(())

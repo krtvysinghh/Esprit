@@ -1,1 +1,1 @@
-/Users/krtvysingh/Projects/Esprit/target/debug/libesprit_core.rlib: /Users/krtvysingh/Projects/Esprit/crates/esprit-core/src/lib.rs
+/Users/krtvysingh/Projects/Esprit/target/debug/libesprit_core.rlib: /Users/krtvysingh/Projects/Esprit/crates/esprit-core/src/banner.rs /Users/krtvysingh/Projects/Esprit/crates/esprit-core/src/error.rs /Users/krtvysingh/Projects/Esprit/crates/esprit-core/src/lib.rs /Users/krtvysingh/Projects/Esprit/crates/esprit-core/src/version.rs

@@ -3,7 +3,7 @@ use globset::{Glob, GlobSetBuilder};
 use ignore::WalkBuilder;
 use rayon::prelude::*;
 use regex::Regex;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
 pub struct SearchOptions {
