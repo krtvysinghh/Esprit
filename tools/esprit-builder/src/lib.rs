@@ -1,11 +1,14 @@
 pub mod app;
 pub mod cli;
 pub mod commands;
+pub mod constants;
 pub mod errors;
 pub mod filesystem;
 pub mod generator;
 pub mod logging;
 pub mod model;
+pub mod project;
 pub mod template;
+pub mod template_engine;
 pub mod util;
 pub mod workspace;
