@@ -19,3 +19,6 @@ esprit-filesystem = { path = "../../crates/esprit-filesystem" }
 esprit-platform = { path = "../../crates/esprit-platform" }
 esprit-search = { path = "../../crates/esprit-search" }
 esprit-ai = { path = "../../crates/esprit-ai" }
+owo-colors = "4.3.0"
+indicatif = "0.18.6"
+sysinfo = "0.39.6"
