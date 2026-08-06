@@ -1,5 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use esprit_search::{SearchEngine, SearchOptions};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
@@ -10,63 +12,49 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    Version,
-
     Doctor,
+    Version,
+    Search {
+        pattern: String,
 
-    Search { pattern: String },
+        #[arg(long)]
+        regex: bool,
+    },
+}
 
-    Organize { folder: String },
+fn doctor() -> Result<()> {
+    println!("{}", esprit_core::banner());
 
-    Stats { folder: String },
+    let cfg = esprit_config::Config::load()?;
+
+    println!("Platform : {:?}", esprit_platform::current());
+    println!("AI Model : {}", cfg.ai_model);
+    println!("Workspace: {}", cfg.workspace.display());
+
+    Ok(())
+}
+
+fn version() {
+    println!("{}", esprit_core::VERSION);
+}
+
+fn search(pattern: String, regex: bool) -> Result<()> {
+    let results = SearchEngine::run(SearchOptions { root: PathBuf::from("."), pattern, regex })?;
+
+    println!("{} match(es)\n", results.len());
+
+    for result in results {
+        println!("{}", result.path.display());
+    }
+
+    Ok(())
 }
 
 fn main() -> Result<()> {
-    let cli = Cli::parse();
-
-    match cli.command {
-        Command::Version => {
-            println!("{}", esprit_core::banner());
-        }
-
-        Command::Doctor => {
-            println!("Platform : {:?}", esprit_platform::current());
-            println!("Model    : {}", esprit_ai::model());
-            println!("Workspace: {:?}", esprit_config::Config::default().workspace);
-        }
-
-        Command::Search { pattern } => {
-            let files = esprit_search::search(&pattern, ".");
-
-            println!("{} matches\n", files.len());
-
-            for file in files {
-                println!("{}", file.display());
-            }
-        }
-
-        Command::Organize { folder } => {
-            esprit_filesystem::organize(folder)?;
-        }
-
-        Command::Stats { folder } => {
-            let stats = esprit_filesystem::stats::FolderStats::scan(folder)?;
-
-            println!();
-            println!("Files       : {}", stats.files);
-            println!("Directories : {}", stats.directories);
-            println!("Size        : {} bytes", stats.bytes);
-
-            println!("\nExtensions");
-
-            let mut exts: Vec<_> = stats.extensions.into_iter().collect();
-
-            exts.sort_by(|a, b| b.1.cmp(&a.1));
-
-            for (ext, count) in exts {
-                println!("{:>8} : {}", ext, count);
-            }
-        }
+    match Cli::parse().command {
+        Command::Doctor => doctor()?,
+        Command::Version => version(),
+        Command::Search { pattern, regex } => search(pattern, regex)?,
     }
 
     Ok(())

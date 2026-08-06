@@ -2,11 +2,11 @@
 name = "esprit-search"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
-globset = "0.4.20"
-grep-regex = "0.1.14"
-grep-searcher = "0.1.17"
-ignore = "0.4.33"
-rayon = "1.12.0"
-walkdir.workspace = true
+anyhow.workspace = true
+ignore.workspace = true
+globset.workspace = true
+regex.workspace = true
+rayon.workspace = true
