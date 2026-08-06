@@ -32,10 +32,7 @@ fn main() -> Result<()> {
         Command::Doctor => {
             println!("Platform : {:?}", esprit_platform::current());
             println!("Model    : {}", esprit_ai::model());
-            println!(
-                "Workspace: {:?}",
-                esprit_config::Config::default().workspace
-            );
+            println!("Workspace: {:?}", esprit_config::Config::default().workspace);
         }
 
         Command::Search { pattern } => {

@@ -8,9 +8,6 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self {
-            workspace: std::env::current_dir().unwrap(),
-            model: "qwen3:1.7b".into(),
-        }
+        Self { workspace: std::env::current_dir().unwrap(), model: "qwen3:1.7b".into() }
     }
 }

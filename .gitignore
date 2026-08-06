@@ -1,0 +1,10 @@
+target/
+.DS_Store
+.env
+.env.*
+*.log
+*.db
+*.sqlite*
+coverage/
+.idea/
+.vscode/

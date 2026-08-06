@@ -18,10 +18,7 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
             continue;
         }
 
-        files.push(IndexedFile {
-            path: entry.path().to_path_buf(),
-            size: entry.metadata()?.len(),
-        });
+        files.push(IndexedFile { path: entry.path().to_path_buf(), size: entry.metadata()?.len() });
     }
 
     Ok(files)

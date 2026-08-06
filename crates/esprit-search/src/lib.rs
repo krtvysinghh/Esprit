@@ -14,11 +14,7 @@ pub fn search(pattern: &str, root: impl AsRef<Path>) -> Vec<PathBuf> {
         .par_bridge()
         .filter_map(Result::ok)
         .map(|e| e.into_path())
-        .filter(|p| {
-            p.file_name()
-                .map(|n| n.to_string_lossy().contains(pattern))
-                .unwrap_or(false)
-        })
+        .filter(|p| p.file_name().map(|n| n.to_string_lossy().contains(pattern)).unwrap_or(false))
         .collect()
 }
 

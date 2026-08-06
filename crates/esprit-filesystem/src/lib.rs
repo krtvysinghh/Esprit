@@ -18,10 +18,7 @@ const CODE: &[&str] = &[
 
 fn unique_path(dir: &Path, file: &Path) -> PathBuf {
     let stem = file.file_stem().unwrap().to_string_lossy();
-    let ext = file
-        .extension()
-        .map(|e| format!(".{}", e.to_string_lossy()))
-        .unwrap_or_default();
+    let ext = file.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
 
     let mut target = dir.join(file.file_name().unwrap());
 
@@ -62,11 +59,7 @@ pub fn organize(root: impl AsRef<Path>) -> Result<()> {
             continue;
         }
 
-        let ext = path
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("")
-            .to_ascii_lowercase();
+        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
 
         for (folder, exts) in groups {
             if exts.contains(&ext.as_str()) {

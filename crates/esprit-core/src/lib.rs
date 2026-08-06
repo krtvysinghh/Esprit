@@ -1,6 +1,7 @@
-pub const APP_NAME: &str = "Esprit";
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub mod banner;
+pub mod error;
+pub mod version;
 
-pub fn banner() -> String {
-    format!("{APP_NAME} {VERSION}")
-}
+pub use banner::banner;
+pub use error::{EspritError, Result};
+pub use version::VERSION;
