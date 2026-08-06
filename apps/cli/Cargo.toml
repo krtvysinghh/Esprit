@@ -1,11 +1,21 @@
 [package]
-name = "cli"
-edition.workspace = true
+name = "esprit"
 version.workspace = true
-license.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "esprit"
+path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
-clap = { workspace = true, features = ["derive"] }
+clap.workspace = true
 tracing.workspace = true
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing-subscriber.workspace = true
+
+esprit-core = { path = "../../crates/esprit-core" }
+esprit-config = { path = "../../crates/esprit-config" }
+esprit-filesystem = { path = "../../crates/esprit-filesystem" }
+esprit-platform = { path = "../../crates/esprit-platform" }
+esprit-search = { path = "../../crates/esprit-search" }
+esprit-ai = { path = "../../crates/esprit-ai" }

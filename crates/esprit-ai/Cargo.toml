@@ -1,0 +1,6 @@
+[package]
+name = "esprit-ai"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]

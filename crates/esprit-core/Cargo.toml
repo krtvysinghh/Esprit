@@ -1,0 +1,6 @@
+[package]
+name = "esprit-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]

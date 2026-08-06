@@ -1,53 +1,40 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(
-    name = "esprit",
-    version,
-    about = "Esprit AI Operating Layer"
-)]
+#[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Command,
 }
 
 #[derive(Subcommand)]
-enum Commands {
+enum Command {
     Version,
     Doctor,
-    Search {
-        query: String,
-    },
-    Organize {
-        folder: String,
-    },
-    Config,
+    Search { query: String },
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Version => {
-            println!("Esprit {}", env!("CARGO_PKG_VERSION"));
+        Command::Version => {
+            println!("{}", esprit_core::banner());
         }
 
-        Commands::Doctor => {
-            println!("✓ CLI OK");
-            println!("✓ Rust OK");
-            println!("✓ Workspace OK");
+        Command::Doctor => {
+            println!("Platform : {:?}", esprit_platform::current());
+            println!("Model    : {}", esprit_ai::model());
+            println!(
+                "Workspace: {:?}",
+                esprit_config::Config::default().workspace
+            );
         }
 
-        Commands::Search { query } => {
-            println!("Searching: {query}");
-        }
-
-        Commands::Organize { folder } => {
-            println!("Organizing: {folder}");
-        }
-
-        Commands::Config => {
-            println!("Configuration");
+        Command::Search { query } => {
+            for file in esprit_search::find(&query, ".") {
+                println!("{}", file.display());
+            }
         }
     }
 }

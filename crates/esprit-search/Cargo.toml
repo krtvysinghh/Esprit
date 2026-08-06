@@ -1,0 +1,7 @@
+[package]
+name = "esprit-search"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+walkdir.workspace = true
