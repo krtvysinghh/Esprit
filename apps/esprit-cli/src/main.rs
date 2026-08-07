@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use esprit_filesystem::stats::FolderStats;
+use esprit_filesystem::{duplicates, organize};
 use esprit_search::{SearchEngine, SearchOptions};
 use std::path::PathBuf;
 
@@ -24,6 +25,14 @@ enum Commands {
     },
 
     Stats {
+        folder: String,
+    },
+
+    Organize {
+        folder: String,
+    },
+
+    Duplicates {
         folder: String,
     },
 }
@@ -78,6 +87,31 @@ fn main() -> Result<()> {
 
             for (ext, count) in exts {
                 println!("{:>8} {}", ext, count);
+            }
+        }
+
+        Commands::Organize { folder } => {
+            organize(folder)?;
+            println!("Done.");
+        }
+
+        Commands::Duplicates { folder } => {
+            let groups = duplicates(folder)?;
+
+            if groups.is_empty() {
+                println!("No duplicates found.");
+            } else {
+                println!("Duplicate groups: {}\n", groups.len());
+
+                for (i, group) in groups.iter().enumerate() {
+                    println!("Group {}", i + 1);
+
+                    for file in group {
+                        println!("  {}", file.display());
+                    }
+
+                    println!();
+                }
             }
         }
     }
