@@ -1,0 +1,222 @@
+===== GIT =====
+api-freeze
+?? .esprit/
+81a5c4c (HEAD -> api-freeze, tag: v0.1.0-alpha.1) docs: add engineering backlog
+b0c800d docs(api): freeze public interfaces
+e3c3d8b (tag: v0.1.0-foundation, main, develop) feat(platform): system information
+3441d21 feat(cli): first production cli
+f689e63 feat(config): persistent configuration engine
+
+===== WORKSPACE =====
+./apps/esprit-cli/Cargo.toml
+./Cargo.toml
+./crates/esprit-ai/Cargo.toml
+./crates/esprit-config/Cargo.toml
+./crates/esprit-core/Cargo.toml
+./crates/esprit-filesystem/Cargo.toml
+./crates/esprit-index/Cargo.toml
+./crates/esprit-platform/Cargo.toml
+./crates/esprit-search/Cargo.toml
+
+===== TREE =====
+.
+├── apps
+│   └── esprit-cli
+│       ├── Cargo.toml
+│       └── src
+├── Cargo.lock
+├── Cargo.toml
+├── clippy.toml
+├── crates
+│   ├── esprit-ai
+│   │   ├── Cargo.toml
+│   │   └── src
+│   ├── esprit-config
+│   │   ├── Cargo.toml
+│   │   └── src
+│   ├── esprit-core
+│   │   ├── Cargo.toml
+│   │   └── src
+│   ├── esprit-filesystem
+│   │   ├── Cargo.toml
+│   │   └── src
+│   ├── esprit-index
+│   │   ├── Cargo.toml
+│   │   └── src
+│   ├── esprit-platform
+│   │   ├── Cargo.toml
+│   │   └── src
+│   └── esprit-search
+│       ├── Cargo.toml
+│       └── src
+├── docs
+│   ├── api
+│   │   ├── AI.md
+│   │   ├── CLI.md
+│   │   ├── CONFIG.md
+│   │   ├── FILESYSTEM.md
+│   │   ├── PLATFORM.md
+│   │   └── SEARCH.md
+│   ├── architecture
+│   │   ├── 00_VISION.md
+│   │   ├── 01_ARCHITECTURE.md
+│   │   ├── 02_CRATE_MAP.md
+│   │   ├── 03_COMMANDS.md
+│   │   ├── 04_PLUGIN_API.md
+│   │   ├── 05_STORAGE.md
+│   │   ├── 06_SEARCH.md
+│   │   ├── 07_AI.md
+│   │   ├── 08_AUTOMATION.md
+│   │   ├── 09_MEMORY.md
+│   │   ├── 10_DESKTOP.md
+│   │   ├── 11_SECURITY.md
+│   │   ├── 12_PACKAGING.md
+│   │   ├── 13_TESTING.md
+│   │   ├── 14_RELEASES.md
+│   │   └── 15_ROADMAP.md
+│   └── project
+│       └── BACKLOG.md
+├── duplicate_test
+│   ├── a.txt
+│   ├── b.txt
+│   └── c.txt
+├── justfile
+├── LICENSE
+├── README.md
+├── rust-toolchain.toml
+├── rustfmt.toml
+├── target
+│   ├── CACHEDIR.TAG
+│   └── debug
+│       ├── build
+│       ├── deps
+│       ├── esprit
+│       ├── esprit.d
+│       ├── examples
+│       ├── incremental
+│       ├── libesprit_ai.d
+│       ├── libesprit_ai.rlib
+│       ├── libesprit_config.d
+│       ├── libesprit_config.rlib
+│       ├── libesprit_core.d
+│       ├── libesprit_core.rlib
+│       ├── libesprit_filesystem.d
+│       ├── libesprit_filesystem.rlib
+│       ├── libesprit_index.d
+│       ├── libesprit_index.rlib
+│       ├── libesprit_platform.d
+│       ├── libesprit_platform.rlib
+│       ├── libesprit_search.d
+│       └── libesprit_search.rlib
+└── test_downloads
+    ├── Archives
+    │   └── e.zip
+    ├── Code
+    │   └── d.rs
+    ├── Documents
+    │   └── a.pdf
+    ├── Images
+    │   └── b.png
+    └── Videos
+        └── c.mp4
+
+36 directories, 64 files
+
+===== BUILD =====
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+
+===== CLIPPY =====
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+
+===== TEST =====
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running unittests src/lib.rs (target/debug/deps/esprit_ai-342e9814c427e793)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/esprit-da6f98ced669adf9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/esprit_config-4b5818d01213a36f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/esprit_core-00b970e6b2493b0e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/esprit_filesystem-3201cc7a69a26374)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/esprit_index-6f31c04f0b2302ee)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/esprit_platform-c109b31455fe1bb0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/esprit_search-01ce52bb7504ac4e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests esprit_ai
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests esprit_config
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests esprit_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests esprit_filesystem
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests esprit_index
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests esprit_platform
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests esprit_search
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

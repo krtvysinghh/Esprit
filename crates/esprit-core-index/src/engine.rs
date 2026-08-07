@@ -24,3 +24,9 @@ impl IndexEngine {
         Ok(())
     }
 }
+
+impl Default for IndexEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}

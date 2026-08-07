@@ -22,3 +22,9 @@ impl Registry {
         self.plugins.iter().map(|p| p.name()).collect()
     }
 }
+
+impl Default for Registry {
+    fn default() -> Self {
+        Self::new()
+    }
+}

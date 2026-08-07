@@ -1,5 +1,4 @@
 edition="2024"
 max_width=100
+newline_style="Unix"
 use_small_heuristics="Max"
-imports_granularity="Crate"
-group_imports="StdExternalCrate"
