@@ -490,6 +490,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-analysis"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "esprit-codeintel",
+ "regex",
+ "walkdir",
+]
+
+[[package]]
 name = "esprit-cli"
 version = "0.1.0"
 dependencies = [
