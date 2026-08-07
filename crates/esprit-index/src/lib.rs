@@ -3,6 +3,7 @@ mod database;
 mod indexer;
 mod model;
 mod query;
+mod schema;
 mod search;
 
 pub use database::{delete_file, insert_file, rename_file, update_file};
