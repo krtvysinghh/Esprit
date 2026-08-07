@@ -562,6 +562,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "esprit-ai",
+ "esprit-embeddings",
  "esprit-index",
 ]
 

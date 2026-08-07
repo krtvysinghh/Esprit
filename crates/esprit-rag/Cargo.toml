@@ -8,3 +8,5 @@ license.workspace = true
 anyhow.workspace = true
 esprit-index = { path = "../esprit-index" }
 esprit-ai = { path = "../esprit-ai" }
+
+esprit-embeddings = { path = "../esprit-embeddings" }
