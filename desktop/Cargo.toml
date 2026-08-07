@@ -1,0 +1,11 @@
+[package]
+name="esprit-desktop"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+
+[dependencies]
+tauri="2"
+tokio={version="1",features=["full"]}
+esprit-rag={path="../crates/esprit-rag"}
+esprit-api={path="../crates/esprit-api"}
