@@ -605,6 +605,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-semantic"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "esprit-embeddings",
+ "esprit-vectors",
+]
+
+[[package]]
 name = "esprit-vectors"
 version = "0.1.0"
 dependencies = [

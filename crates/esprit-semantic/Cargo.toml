@@ -1,0 +1,10 @@
+[package]
+name="esprit-semantic"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+
+[dependencies]
+anyhow.workspace=true
+esprit-embeddings={path="../esprit-embeddings"}
+esprit-vectors={path="../esprit-vectors"}
