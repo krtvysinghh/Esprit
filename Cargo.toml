@@ -17,6 +17,7 @@ members = [
     "crates/esprit-semantic",
     "crates/esprit-ranking",
     "crates/esprit-bench",
+    "crates/esprit-metrics",
     "crates/esprit-codeintel",
     "crates/esprit-analysis",
     "crates/esprit-daemon",
@@ -36,6 +37,7 @@ members = [
     "crates/esprit-semantic",
     "crates/esprit-ranking",
     "crates/esprit-bench",
+    "crates/esprit-metrics",
     "crates/esprit-codeintel",
     "crates/esprit-analysis",
     "crates/esprit-daemon",
@@ -49,6 +51,7 @@ members = [
     "crates/esprit-semantic",
     "crates/esprit-ranking",
     "crates/esprit-bench",
+    "crates/esprit-metrics",
     "crates/esprit-codeintel",
     "crates/esprit-analysis",
     "crates/esprit-daemon",
@@ -61,6 +64,7 @@ members = [
     "crates/esprit-semantic",
     "crates/esprit-ranking",
     "crates/esprit-bench",
+    "crates/esprit-metrics",
     "crates/esprit-codeintel",
     "crates/esprit-analysis",
     "crates/esprit-daemon",
@@ -72,6 +76,7 @@ members = [
     "crates/esprit-semantic",
     "crates/esprit-ranking",
     "crates/esprit-bench",
+    "crates/esprit-metrics",
     "crates/esprit-codeintel",
     "crates/esprit-analysis",
     "crates/esprit-daemon",
@@ -82,6 +87,7 @@ members = [
     "crates/esprit-semantic",
     "crates/esprit-ranking",
     "crates/esprit-bench",
+    "crates/esprit-metrics",
     "crates/esprit-codeintel",
     "crates/esprit-analysis",
     "crates/esprit-daemon",
@@ -91,6 +97,7 @@ members = [
     "desktop", "crates/esprit-semantic",
     "crates/esprit-ranking",
     "crates/esprit-bench",
+    "crates/esprit-metrics",
     "crates/esprit-codeintel",
     "crates/esprit-analysis",
     "crates/esprit-daemon",
@@ -117,7 +124,9 @@ members = [
     "crates/esprit-production",
     "desktop", "desktop", "crates/esprit-core-index",
     "crates/esprit-production", "crates/esprit-production", "crates/esprit-ranking",
-    "crates/esprit-bench", "crates/esprit-bench"]
+    "crates/esprit-bench",
+    "crates/esprit-metrics", "crates/esprit-bench",
+    "crates/esprit-metrics", "crates/esprit-telemetry", "crates/esprit-cache", "crates/esprit-metrics"]
 
 default-members = [
     "apps/esprit-cli"
@@ -131,6 +140,7 @@ authors = ["Kartavya Singh"]
 rust-version = "1.88"
 
 [workspace.dependencies]
+dashmap = "6"
 
 anyhow = "1"
 
