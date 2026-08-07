@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
 use esprit_filesystem::{duplicates, organize};
 use esprit_search::{SearchEngine, SearchOptions};
@@ -16,6 +17,8 @@ struct Cli {
 enum Commands {
     Doctor,
     Version,
+
+    Config,
 
     Search {
         pattern: String,
@@ -60,6 +63,12 @@ fn main() -> Result<()> {
             println!("Cargo  : {}", if report.cargo { "✓" } else { "✗" });
             println!("Git    : {}", if report.git { "✓" } else { "✗" });
             println!("Ollama : {}", if report.ollama { "✓" } else { "✗" });
+        }
+
+        Commands::Config => {
+            let cfg = Config::default();
+
+            println!("{:#?}", cfg);
         }
 
         Commands::Search { pattern, regex } => {
