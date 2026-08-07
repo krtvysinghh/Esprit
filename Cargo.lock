@@ -504,6 +504,7 @@ dependencies = [
  "esprit-platform",
  "esprit-rag",
  "esprit-search",
+ "esprit-workflows",
 ]
 
 [[package]]

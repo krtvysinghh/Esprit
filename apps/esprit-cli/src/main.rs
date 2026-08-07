@@ -8,6 +8,7 @@ use esprit_filesystem::{duplicates, organize};
 use esprit_index::{all_files, index, rebuild_search_index, search};
 use esprit_platform::{doctor, watch};
 use esprit_rag;
+use esprit_workflows;
 
 #[derive(Parser)]
 #[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
@@ -59,6 +60,11 @@ enum Commands {
 
     Agent {
         agent: String,
+        prompt: String,
+    },
+
+    Workflow {
+        workflow: String,
         prompt: String,
     },
 }
@@ -180,6 +186,17 @@ fn main() -> Result<()> {
             };
 
             println!("{}", run(agent, &prompt)?);
+        }
+
+        Commands::Workflow { workflow, prompt } => {
+            let out = match workflow.as_str() {
+                "explain" => esprit_workflows::explain(&prompt)?,
+                "review" => esprit_workflows::code_review(&prompt)?,
+                "search" => esprit_workflows::project_search(&prompt)?,
+                _ => anyhow::bail!("unknown workflow"),
+            };
+
+            println!("{out}");
         }
 
         Commands::Ask { prompt } => {
