@@ -1,0 +1,10 @@
+[package]
+name="esprit-storage"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+
+[dependencies]
+anyhow.workspace=true
+directories.workspace=true
+rusqlite.workspace=true

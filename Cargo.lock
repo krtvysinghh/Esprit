@@ -1179,6 +1179,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-config2"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "toml 0.9.12+spec-1.1.0",
+]
+
+[[package]]
 name = "esprit-core"
 version = "0.1.0"
 dependencies = [
@@ -1251,6 +1260,13 @@ dependencies = [
  "rusqlite",
  "tantivy",
  "walkdir",
+]
+
+[[package]]
+name = "esprit-jobs"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
 ]
 
 [[package]]
@@ -1337,6 +1353,15 @@ dependencies = [
  "esprit-embeddings",
  "esprit-vectors",
  "rayon",
+]
+
+[[package]]
+name = "esprit-storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "directories",
+ "rusqlite",
 ]
 
 [[package]]
