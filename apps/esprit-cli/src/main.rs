@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use esprit_agents::{Agent, run};
 use esprit_ai::Ai;
 use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
@@ -53,6 +54,11 @@ enum Commands {
     },
 
     Ask {
+        prompt: String,
+    },
+
+    Agent {
+        agent: String,
         prompt: String,
     },
 }
@@ -163,6 +169,17 @@ fn main() -> Result<()> {
 
         Commands::Watch { folder } => {
             watch(folder)?;
+        }
+
+        Commands::Agent { agent, prompt } => {
+            let agent = match agent.as_str() {
+                "chat" => Agent::Chat,
+                "code" => Agent::Code,
+                "search" => Agent::Search,
+                _ => anyhow::bail!("unknown agent"),
+            };
+
+            println!("{}", run(agent, &prompt)?);
         }
 
         Commands::Ask { prompt } => {

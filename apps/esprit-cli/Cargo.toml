@@ -22,3 +22,5 @@ esprit-index = { path = "../../crates/esprit-index" }
 esprit-ai = { path = "../../crates/esprit-ai" }
 
 esprit-rag = { path = "../../crates/esprit-rag" }
+
+esprit-agents = { path = "../../crates/esprit-agents" }
