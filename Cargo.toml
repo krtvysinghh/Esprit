@@ -13,6 +13,7 @@ members = [
     "crates/esprit-agents",
     "crates/esprit-workflows",
     "crates/esprit-plugins",
+    "crates/esprit-vectors",
     "crates/esprit-embeddings",
     "crates/esprit-index",
     "crates/esprit-ai",
@@ -20,10 +21,14 @@ members = [
 , "crates/esprit-memory",
     "crates/esprit-agents",
     "crates/esprit-workflows",
-    "crates/esprit-plugins", "crates/esprit-agents",
+    "crates/esprit-plugins",
+    "crates/esprit-vectors", "crates/esprit-agents",
     "crates/esprit-workflows",
-    "crates/esprit-plugins", "crates/esprit-workflows",
-    "crates/esprit-plugins", "crates/esprit-plugins"]
+    "crates/esprit-plugins",
+    "crates/esprit-vectors", "crates/esprit-workflows",
+    "crates/esprit-plugins",
+    "crates/esprit-vectors", "crates/esprit-plugins",
+    "crates/esprit-vectors", "crates/esprit-vectors"]
 
 default-members = [
     "apps/esprit-cli"
