@@ -1,7 +1,5 @@
 use anyhow::Result;
-use globset::{Glob, GlobSetBuilder};
-use ignore::WalkBuilder;
-use rayon::prelude::*;
+use esprit_index::all_files;
 use regex::Regex;
 use std::path::PathBuf;
 
@@ -21,47 +19,36 @@ pub struct SearchEngine;
 
 impl SearchEngine {
     pub fn run(options: SearchOptions) -> Result<Vec<SearchResult>> {
-        let walker = WalkBuilder::new(options.root)
-            .hidden(false)
-            .git_ignore(true)
-            .git_global(true)
-            .git_exclude(true)
-            .build();
+        let files = all_files()?;
 
         if options.regex {
             let re = Regex::new(&options.pattern)?;
 
-            let files = walker
-                .par_bridge()
-                .filter_map(Result::ok)
-                .filter_map(|entry| {
-                    let path = entry.into_path();
-
-                    let name = path.file_name()?.to_string_lossy();
-
-                    if re.is_match(&name) { Some(SearchResult { path }) } else { None }
+            return Ok(files
+                .into_iter()
+                .filter(|file| {
+                    file.path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .map(|n| re.is_match(n))
+                        .unwrap_or(false)
                 })
-                .collect();
-
-            return Ok(files);
+                .map(|file| SearchResult { path: file.path })
+                .collect());
         }
 
-        let mut builder = GlobSetBuilder::new();
+        let pattern = options.pattern.to_lowercase();
 
-        builder.add(Glob::new(&options.pattern)?);
-
-        let matcher = builder.build()?;
-
-        let files = walker
-            .par_bridge()
-            .filter_map(Result::ok)
-            .filter_map(|entry| {
-                let path = entry.into_path();
-
-                if matcher.is_match(&path) { Some(SearchResult { path }) } else { None }
+        Ok(files
+            .into_iter()
+            .filter(|file| {
+                file.path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n.to_lowercase().contains(&pattern))
+                    .unwrap_or(false)
             })
-            .collect();
-
-        Ok(files)
+            .map(|file| SearchResult { path: file.path })
+            .collect())
     }
 }

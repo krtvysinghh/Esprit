@@ -10,3 +10,5 @@ ignore.workspace = true
 globset.workspace = true
 regex.workspace = true
 rayon.workspace = true
+
+esprit-index = { path = "../esprit-index" }
