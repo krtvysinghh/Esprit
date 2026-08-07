@@ -4,6 +4,7 @@ use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
 use esprit_filesystem::{duplicates, organize};
 use esprit_index::{all_files, index};
+use esprit_platform::{doctor, watch};
 use esprit_search::{SearchEngine, SearchOptions};
 use std::path::PathBuf;
 
@@ -43,6 +44,10 @@ enum Commands {
     },
 
     Db,
+
+    Watch {
+        folder: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -52,7 +57,7 @@ fn main() -> Result<()> {
         }
 
         Commands::Doctor => {
-            let report = esprit_platform::doctor();
+            let report = doctor();
 
             println!("{}", esprit_core::banner());
             println!("Operating System : {}", report.os);
@@ -143,8 +148,12 @@ fn main() -> Result<()> {
             println!("Database contains {} files.\n", files.len());
 
             for file in files {
-                println!("{:>10}  {}", file.size, file.path.display());
+                println!("{:>10} {}", file.size, file.path.display());
             }
+        }
+
+        Commands::Watch { folder } => {
+            watch(folder)?;
         }
     }
 
