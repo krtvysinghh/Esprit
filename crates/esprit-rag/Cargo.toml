@@ -3,7 +3,8 @@ name = "esprit-rag"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-authors.workspace = true
-rust-version.workspace = true
 
 [dependencies]
+anyhow.workspace = true
+esprit-index = { path = "../esprit-index" }
+esprit-ai = { path = "../esprit-ai" }

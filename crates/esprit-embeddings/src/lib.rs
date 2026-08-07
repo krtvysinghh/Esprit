@@ -1,14 +1,24 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+use anyhow::Result;
+use reqwest::blocking::Client;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize)]
+struct EmbedRequest<'a> {
+    model: &'a str,
+    input: &'a str,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Deserialize)]
+struct EmbedResponse {
+    embeddings: Vec<Vec<f32>>,
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn embed(model: &str, text: &str) -> Result<Vec<f32>> {
+    let res: EmbedResponse = Client::new()
+        .post("http://127.0.0.1:11434/api/embed")
+        .json(&EmbedRequest { model, input: text })
+        .send()?
+        .json()?;
+
+    Ok(res.embeddings.into_iter().next().unwrap_or_default())
 }

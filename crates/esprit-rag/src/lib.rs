@@ -1,14 +1,14 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use anyhow::Result;
+use esprit_ai::Ai;
+use esprit_index::search;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub fn ask(question: &str) -> Result<String> {
+    let files = search(question)?;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    let context = files.iter().take(20).map(|f| format!("- {}", f)).collect::<Vec<_>>().join("\n");
+
+    let prompt =
+        format!("You are Esprit.\n\nRelevant files:\n{}\n\nQuestion:\n{}\n", context, question);
+
+    Ai::new("qwen3:1.7b").ask(&prompt)
 }

@@ -1,14 +1,45 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+use anyhow::{Result, anyhow};
+use reqwest::blocking::Client;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize)]
+struct GenerateRequest<'a> {
+    model: &'a str,
+    prompt: &'a str,
+    stream: bool,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Deserialize)]
+struct GenerateResponse {
+    response: String,
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+pub struct Ai {
+    client: Client,
+    model: String,
+}
+
+impl Ai {
+    pub fn new(model: impl Into<String>) -> Self {
+        Self { client: Client::new(), model: model.into() }
+    }
+
+    pub fn health(&self) -> Result<()> {
+        self.client
+            .get("http://127.0.0.1:11434/api/tags")
+            .send()
+            .map_err(|_| anyhow!("Ollama is not running"))?;
+        Ok(())
+    }
+
+    pub fn ask(&self, prompt: &str) -> Result<String> {
+        let res: GenerateResponse = self
+            .client
+            .post("http://127.0.0.1:11434/api/generate")
+            .json(&GenerateRequest { model: &self.model, prompt, stream: false })
+            .send()?
+            .json()?;
+
+        Ok(res.response)
     }
 }

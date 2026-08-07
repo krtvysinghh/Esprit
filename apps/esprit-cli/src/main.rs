@@ -1,10 +1,12 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use esprit_ai::Ai;
 use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
 use esprit_filesystem::{duplicates, organize};
 use esprit_index::{all_files, index, rebuild_search_index, search};
 use esprit_platform::{doctor, watch};
+use esprit_rag;
 
 #[derive(Parser)]
 #[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
@@ -48,6 +50,10 @@ enum Commands {
 
     Watch {
         folder: String,
+    },
+
+    Ask {
+        prompt: String,
     },
 }
 
@@ -157,6 +163,12 @@ fn main() -> Result<()> {
 
         Commands::Watch { folder } => {
             watch(folder)?;
+        }
+
+        Commands::Ask { prompt } => {
+            let ai = Ai::new("qwen3:1.7b");
+            ai.health()?;
+            println!("{}", esprit_rag::ask(&prompt)?);
         }
     }
 

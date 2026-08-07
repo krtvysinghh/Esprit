@@ -18,3 +18,7 @@ esprit-platform = { path = "../../crates/esprit-platform" }
 esprit-search = { path = "../../crates/esprit-search" }
 esprit-filesystem = { path = "../../crates/esprit-filesystem" }
 esprit-index = { path = "../../crates/esprit-index" }
+
+esprit-ai = { path = "../../crates/esprit-ai" }
+
+esprit-rag = { path = "../../crates/esprit-rag" }
