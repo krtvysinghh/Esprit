@@ -3,10 +3,8 @@ use clap::{Parser, Subcommand};
 use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
 use esprit_filesystem::{duplicates, organize};
-use esprit_index::{all_files, index};
+use esprit_index::{all_files, index, rebuild_search_index, search};
 use esprit_platform::{doctor, watch};
-use esprit_search::{SearchEngine, SearchOptions};
-use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
@@ -23,6 +21,7 @@ enum Commands {
 
     Search {
         pattern: String,
+
         #[arg(long)]
         regex: bool,
     },
@@ -42,6 +41,8 @@ enum Commands {
     Index {
         folder: String,
     },
+
+    Rebuild,
 
     Db,
 
@@ -84,17 +85,15 @@ fn main() -> Result<()> {
             println!("Color     : {}", cfg.color);
         }
 
-        Commands::Search { pattern, regex } => {
-            let results =
-                SearchEngine::run(SearchOptions { root: PathBuf::from("."), pattern, regex })?;
+        Commands::Search { pattern, .. } => {
+            let results = search(&pattern)?;
 
             println!("Found {} matches\n", results.len());
 
-            for result in results {
-                println!("{}", result.path.display());
+            for path in results {
+                println!("{path}");
             }
         }
-
         Commands::Stats { folder } => {
             let stats = FolderStats::scan(folder)?;
 
@@ -140,6 +139,10 @@ fn main() -> Result<()> {
         Commands::Index { folder } => {
             let files = index(folder)?;
             println!("Indexed {} files.", files.len());
+        }
+
+        Commands::Rebuild => {
+            rebuild_search_index()?;
         }
 
         Commands::Db => {
