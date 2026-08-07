@@ -9,3 +9,4 @@ anyhow.workspace = true
 walkdir.workspace = true
 directories.workspace = true
 rusqlite.workspace = true
+tantivy.workspace = true

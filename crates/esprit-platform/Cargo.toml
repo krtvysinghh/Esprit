@@ -9,4 +9,6 @@ anyhow.workspace = true
 sysinfo.workspace = true
 notify.workspace = true
 
+crossbeam-channel = "0.5"
+
 esprit-index = { path = "../esprit-index" }
