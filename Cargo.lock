@@ -1288,6 +1288,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-pipeline"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
 name = "esprit-platform"
 version = "0.1.0"
 dependencies = [
@@ -1371,6 +1378,22 @@ dependencies = [
  "anyhow",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "esprit-testing"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
+name = "esprit-utils"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "hex",
+ "sha2 0.10.9",
 ]
 
 [[package]]
