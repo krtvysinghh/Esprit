@@ -546,6 +546,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-memory"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "directories",
+ "rusqlite",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "esprit-platform"
 version = "0.1.0"
 dependencies = [

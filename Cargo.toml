@@ -9,11 +9,12 @@ members = [
     "crates/esprit-filesystem",
     "crates/esprit-search",
     "crates/esprit-rag",
+    "crates/esprit-memory",
     "crates/esprit-embeddings",
     "crates/esprit-index",
     "crates/esprit-ai",
     "crates/esprit-platform"
-]
+, "crates/esprit-memory"]
 
 default-members = [
     "apps/esprit-cli"
