@@ -66,9 +66,12 @@ fn main() -> Result<()> {
         }
 
         Commands::Config => {
-            let cfg = Config::default();
+            let cfg = Config::load()?;
 
-            println!("{:#?}", cfg);
+            println!("AI Model  : {}", cfg.ai_model);
+            println!("Workspace : {}", cfg.workspace.display());
+            println!("Threads   : {}", cfg.threads);
+            println!("Color     : {}", cfg.color);
         }
 
         Commands::Search { pattern, regex } => {
@@ -89,10 +92,10 @@ fn main() -> Result<()> {
             println!("Directories : {}", stats.directories);
             println!("Size        : {} bytes", stats.bytes);
 
-            println!("\nExtensions:");
-
             let mut exts: Vec<_> = stats.extensions.into_iter().collect();
             exts.sort_by(|a, b| b.1.cmp(&a.1));
+
+            println!("\nExtensions:");
 
             for (ext, count) in exts {
                 println!("{:>8} {}", ext, count);
