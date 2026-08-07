@@ -250,6 +250,7 @@ dependencies = [
  "esprit-config",
  "esprit-core",
  "esprit-filesystem",
+ "esprit-index",
  "esprit-platform",
  "esprit-search",
 ]

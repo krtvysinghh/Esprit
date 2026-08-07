@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
 use esprit_filesystem::{duplicates, organize};
+use esprit_index::index;
 use esprit_search::{SearchEngine, SearchOptions};
 use std::path::PathBuf;
 
@@ -17,12 +18,10 @@ struct Cli {
 enum Commands {
     Doctor,
     Version,
-
     Config,
 
     Search {
         pattern: String,
-
         #[arg(long)]
         regex: bool,
     },
@@ -36,6 +35,10 @@ enum Commands {
     },
 
     Duplicates {
+        folder: String,
+    },
+
+    Index {
         folder: String,
     },
 }
@@ -124,6 +127,16 @@ fn main() -> Result<()> {
 
                     println!();
                 }
+            }
+        }
+
+        Commands::Index { folder } => {
+            let files = index(folder)?;
+
+            println!("Indexed {} files\n", files.len());
+
+            for file in files {
+                println!("{:>10}  {}", file.size, file.path.display());
             }
         }
     }
