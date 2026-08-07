@@ -575,6 +575,7 @@ dependencies = [
  "esprit-ai",
  "esprit-embeddings",
  "esprit-index",
+ "esprit-memory",
 ]
 
 [[package]]
