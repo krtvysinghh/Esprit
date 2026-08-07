@@ -1,3 +1,4 @@
+mod content;
 mod database;
 mod indexer;
 mod model;
