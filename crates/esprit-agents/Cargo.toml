@@ -1,0 +1,10 @@
+[package]
+name = "esprit-agents"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+esprit-ai = { path = "../esprit-ai" }
+esprit-rag = { path = "../esprit-rag" }

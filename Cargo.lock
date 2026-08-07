@@ -471,6 +471,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-agents"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "esprit-ai",
+ "esprit-rag",
+]
+
+[[package]]
 name = "esprit-ai"
 version = "0.1.0"
 dependencies = [
