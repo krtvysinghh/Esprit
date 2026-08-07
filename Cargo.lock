@@ -508,6 +508,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-codeintel"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "regex",
+ "serde",
+ "serde_json",
+ "walkdir",
+]
+
+[[package]]
 name = "esprit-config"
 version = "0.1.0"
 dependencies = [
