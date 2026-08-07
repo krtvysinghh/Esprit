@@ -1286,6 +1286,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-ranking"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+]
+
+[[package]]
 name = "esprit-search"
 version = "0.1.0"
 dependencies = [
