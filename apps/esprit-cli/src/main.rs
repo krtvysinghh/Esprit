@@ -7,8 +7,6 @@ use esprit_filesystem::stats::FolderStats;
 use esprit_filesystem::{duplicates, organize};
 use esprit_index::{all_files, index, rebuild_search_index, search};
 use esprit_platform::{doctor, watch};
-use esprit_rag;
-use esprit_workflows;
 
 #[derive(Parser)]
 #[command(name = "esprit", version, about = "Esprit AI Operating Layer")]
@@ -120,7 +118,7 @@ fn main() -> Result<()> {
             println!("Size        : {} bytes", stats.bytes);
 
             let mut exts: Vec<_> = stats.extensions.into_iter().collect();
-            exts.sort_by(|a, b| b.1.cmp(&a.1));
+            exts.sort_by_key(|e| std::cmp::Reverse(e.1));
 
             println!("\nExtensions:");
 
