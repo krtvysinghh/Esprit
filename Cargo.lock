@@ -1233,6 +1233,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-diagnostics"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "esprit-embeddings"
 version = "0.1.0"
 dependencies = [
@@ -1285,6 +1292,13 @@ name = "esprit-metrics"
 version = "0.1.0"
 dependencies = [
  "parking_lot",
+]
+
+[[package]]
+name = "esprit-package"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
 ]
 
 [[package]]
@@ -1349,6 +1363,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "esprit-index",
+]
+
+[[package]]
+name = "esprit-security"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "sha2 0.10.9",
 ]
 
 [[package]]
