@@ -450,6 +450,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-embeddings"
+version = "0.1.0"
+
+[[package]]
 name = "esprit-filesystem"
 version = "0.1.0"
 dependencies = [
@@ -479,6 +483,10 @@ dependencies = [
  "notify",
  "sysinfo",
 ]
+
+[[package]]
+name = "esprit-rag"
+version = "0.1.0"
 
 [[package]]
 name = "esprit-search"
