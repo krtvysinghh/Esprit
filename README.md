@@ -1,15 +1,21 @@
 # Esprit
 
-AI-powered local operating layer.
+AI-powered local knowledge engine.
 
-## Build
+## Features
+
+- Full-text search
+- Semantic search
+- SQLite + Tantivy
+- Ollama
+- RAG
+- Agents
+- Workflows
+- HTTP API
+- Desktop
+- Plugins
+
+## Quick Start
 
 cargo build --workspace
-
-## Test
-
-cargo test
-
-## Run
-
-cargo run -p esprit-cli
+cargo run -p esprit-cli -- doctor
