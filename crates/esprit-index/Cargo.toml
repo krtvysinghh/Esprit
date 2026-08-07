@@ -2,7 +2,10 @@
 name = "esprit-index"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
 walkdir.workspace = true
+directories.workspace = true
+rusqlite.workspace = true

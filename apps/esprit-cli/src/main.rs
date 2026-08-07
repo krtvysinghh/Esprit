@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
 use esprit_filesystem::{duplicates, organize};
-use esprit_index::index;
+use esprit_index::{all_files, index};
 use esprit_search::{SearchEngine, SearchOptions};
 use std::path::PathBuf;
 
@@ -41,6 +41,8 @@ enum Commands {
     Index {
         folder: String,
     },
+
+    Db,
 }
 
 fn main() -> Result<()> {
@@ -132,8 +134,13 @@ fn main() -> Result<()> {
 
         Commands::Index { folder } => {
             let files = index(folder)?;
+            println!("Indexed {} files.", files.len());
+        }
 
-            println!("Indexed {} files\n", files.len());
+        Commands::Db => {
+            let files = all_files()?;
+
+            println!("Database contains {} files.\n", files.len());
 
             for file in files {
                 println!("{:>10}  {}", file.size, file.path.display());
