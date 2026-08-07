@@ -11,12 +11,15 @@ members = [
     "crates/esprit-rag",
     "crates/esprit-memory",
     "crates/esprit-agents",
+    "crates/esprit-workflows",
     "crates/esprit-embeddings",
     "crates/esprit-index",
     "crates/esprit-ai",
     "crates/esprit-platform"
 , "crates/esprit-memory",
-    "crates/esprit-agents", "crates/esprit-agents"]
+    "crates/esprit-agents",
+    "crates/esprit-workflows", "crates/esprit-agents",
+    "crates/esprit-workflows", "crates/esprit-workflows"]
 
 default-members = [
     "apps/esprit-cli"

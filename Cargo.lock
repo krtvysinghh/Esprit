@@ -597,6 +597,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-workflows"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "esprit-agents",
+]
+
+[[package]]
 name = "fallible-iterator"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
