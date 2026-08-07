@@ -1,0 +1,11 @@
+[package]
+name="esprit-daemon"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+
+[dependencies]
+anyhow.workspace=true
+notify.workspace=true
+crossbeam-channel="0.5"
+esprit-index={path="../esprit-index"}

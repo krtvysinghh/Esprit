@@ -548,6 +548,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-daemon"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crossbeam-channel",
+ "esprit-index",
+ "notify",
+]
+
+[[package]]
 name = "esprit-embeddings"
 version = "0.1.0"
 dependencies = [
