@@ -6,5 +6,7 @@ license.workspace=true
 
 [dependencies]
 anyhow.workspace=true
+dashmap = "6.2.1"
 esprit-embeddings={path="../esprit-embeddings"}
 esprit-vectors={path="../esprit-vectors"}
+rayon.workspace = true
