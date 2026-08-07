@@ -1120,6 +1120,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-bench"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "esprit-index",
+ "esprit-ranking",
+ "esprit-semantic",
+ "serde",
+ "serde_json",
+ "walkdir",
+]
+
+[[package]]
 name = "esprit-cli"
 version = "0.1.0"
 dependencies = [
