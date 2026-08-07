@@ -38,7 +38,7 @@ members = [
     "crates/esprit-pipeline",
     "crates/esprit-utils",
     "crates/esprit-security",
-    "crates/esprit-package",
+    "crates/esprit-package", "crates/esprit-app",
 ]
 
 default-members = [

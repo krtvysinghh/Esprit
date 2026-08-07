@@ -1,0 +1,14 @@
+[package]
+name = "esprit-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+esprit-config = { path = "../esprit-config" }
+esprit-index = { path = "../esprit-index" }
+esprit-rag = { path = "../esprit-rag" }
+esprit-agents = { path = "../esprit-agents" }
+esprit-workflows = { path = "../esprit-workflows" }
+esprit-api = { path = "../esprit-api" }

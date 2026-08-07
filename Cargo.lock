@@ -1120,6 +1120,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-app"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "esprit-agents",
+ "esprit-api",
+ "esprit-config",
+ "esprit-index",
+ "esprit-rag",
+ "esprit-workflows",
+]
+
+[[package]]
 name = "esprit-bench"
 version = "0.1.0"
 dependencies = [
