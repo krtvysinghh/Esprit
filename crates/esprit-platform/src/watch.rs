@@ -1,5 +1,10 @@
 use anyhow::Result;
-use notify::{Event, RecursiveMode, Watcher, recommended_watcher};
+use esprit_index::{delete_file, insert_file, rename_file, update_file};
+use notify::{
+    Event, EventKind, RecursiveMode, Watcher,
+    event::{CreateKind, ModifyKind, RemoveKind, RenameMode},
+    recommended_watcher,
+};
 use std::{path::Path, sync::mpsc::channel};
 
 pub fn watch(root: impl AsRef<Path>) -> Result<()> {
@@ -15,15 +20,40 @@ pub fn watch(root: impl AsRef<Path>) -> Result<()> {
 
     loop {
         match rx.recv()? {
-            Ok(event) => {
-                println!("{:?}", event.kind);
-
-                for path in event.paths {
-                    println!("  {}", path.display());
+            Ok(event) => match event.kind {
+                EventKind::Create(CreateKind::File) | EventKind::Create(CreateKind::Any) => {
+                    for path in &event.paths {
+                        let _ = insert_file(path);
+                        println!("+ {}", path.display());
+                    }
                 }
 
-                println!();
-            }
+                EventKind::Modify(ModifyKind::Data(_))
+                | EventKind::Modify(ModifyKind::Metadata(_))
+                | EventKind::Modify(ModifyKind::Any) => {
+                    for path in &event.paths {
+                        let _ = update_file(path);
+                        println!("~ {}", path.display());
+                    }
+                }
+
+                EventKind::Remove(RemoveKind::File) | EventKind::Remove(RemoveKind::Any) => {
+                    for path in &event.paths {
+                        let _ = delete_file(path);
+                        println!("- {}", path.display());
+                    }
+                }
+
+                EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => {
+                    if event.paths.len() == 2 {
+                        let _ = rename_file(&event.paths[0], &event.paths[1]);
+
+                        println!("R {} -> {}", event.paths[0].display(), event.paths[1].display());
+                    }
+                }
+
+                _ => {}
+            },
 
             Err(err) => {
                 eprintln!("{err}");

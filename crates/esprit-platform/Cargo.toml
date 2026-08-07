@@ -8,3 +8,5 @@ license.workspace = true
 anyhow.workspace = true
 sysinfo.workspace = true
 notify.workspace = true
+
+esprit-index = { path = "../esprit-index" }
