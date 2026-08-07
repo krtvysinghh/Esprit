@@ -32,23 +32,20 @@ Answer ONLY from the supplied source code.
 If the answer is absent, reply:
 "I couldn't find that in the indexed project."
 
-Conversation Memory
-===================
+# Conversation Memory
 
 {}
 
-Project Context
-===============
+# Project Context
 
 {}
 
-Question
-========
+# Question
 
 {}
 
 Answer:"#,
-        context, question
+        history, context, question,
     );
 
     let answer = Ai::new("qwen3:1.7b").ask(&prompt)?;
