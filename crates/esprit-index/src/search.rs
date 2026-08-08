@@ -73,7 +73,7 @@ pub fn search(query: &str) -> Result<Vec<String>> {
         {
             if let Some(v) = doc.get_first(path) {
                 if let Some(s) = v.as_str() {
-                    res.push(s.to_string());
+                    out.push(s.to_string());
                 }
             }
         }
