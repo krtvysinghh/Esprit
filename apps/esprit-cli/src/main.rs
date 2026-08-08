@@ -198,9 +198,8 @@ fn main() -> Result<()> {
         }
 
         Commands::Ask { prompt } => {
-            let ai = Ai::new(
-                &std::env::var("ESPRIT_MODEL").unwrap_or_else(|_| "qwen3:1.7b".to_string()),
-            );
+            let ai =
+                Ai::new(std::env::var("ESPRIT_MODEL").unwrap_or_else(|_| "qwen3:1.7b".to_string()));
             ai.health()?;
             println!("{}", esprit_rag::ask(&prompt)?);
         }

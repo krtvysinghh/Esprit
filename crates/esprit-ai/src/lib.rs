@@ -26,7 +26,7 @@ impl Ai {
 
     pub fn health(&self) -> Result<()> {
         self.client
-            .get(&format!(
+            .get(format!(
                 "{}/api/tags",
                 std::env::var("OLLAMA_URL")
                     .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
@@ -39,7 +39,7 @@ impl Ai {
     pub fn ask(&self, prompt: &str) -> Result<String> {
         let res: GenerateResponse = self
             .client
-            .post(&format!(
+            .post(format!(
                 "{}/api/generate",
                 std::env::var("OLLAMA_URL")
                     .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
