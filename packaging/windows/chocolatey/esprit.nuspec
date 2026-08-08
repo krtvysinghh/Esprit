@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>esprit</id>
+    <version>0.1.0</version>
+    <title>Esprit</title>
+    <authors>Kartavya Singh</authors>
+    <projectUrl>https://github.com/krtvysinghh/Esprit</projectUrl>
+    <licenseUrl>https://github.com/krtvysinghh/Esprit/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>AI-powered local knowledge engine.</description>
+    <tags>ai knowledge search local rust cli</tags>
+  </metadata>
+</package>

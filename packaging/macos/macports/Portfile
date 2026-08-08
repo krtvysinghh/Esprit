@@ -1,0 +1,29 @@
+PortSystem          1.0
+
+name                esprit
+version             0.1.0
+categories          devel
+license             MIT
+maintainers         krtvysinghh
+description         AI-powered local knowledge engine
+homepage            https://github.com/krtvysinghh/Esprit
+
+master_sites        https://github.com/krtvysinghh/Esprit/archive/
+distname            refs/tags/v${version}
+
+checksums           rmd160  REPLACE
+                    sha256  REPLACE
+                    size    REPLACE
+
+depends_build       port:cargo
+
+use_configure       no
+
+build {
+    system -W ${worksrcpath} "cargo build --release"
+}
+
+destroot {
+    xinstall -m 0755 ${worksrcpath}/target/release/esprit \
+        ${destroot}${prefix}/bin/esprit
+}

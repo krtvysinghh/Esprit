@@ -1,0 +1,8 @@
+Package: esprit
+Version: 0.1.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Kartavya Singh
+Description: AI-powered local knowledge engine
+ Esprit is an AI-powered local knowledge engine.

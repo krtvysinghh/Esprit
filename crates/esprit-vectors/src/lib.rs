@@ -1,6 +1,6 @@
 use anyhow::Result;
 use directories::ProjectDirs;
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use std::fs;
 
 fn db() -> Result<Connection> {

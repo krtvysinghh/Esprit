@@ -1,4 +1,4 @@
-use tantivy::schema::{Field, STORED, Schema, SchemaBuilder, TEXT};
+use tantivy::schema::{Field, Schema, SchemaBuilder, STORED, TEXT};
 
 pub struct Fields {
     pub path: Field,

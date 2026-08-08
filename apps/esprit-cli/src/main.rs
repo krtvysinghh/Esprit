@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use esprit_agents::{Agent, run};
+use esprit_agents::{run, Agent};
 use esprit_ai::Ai;
 use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
@@ -198,7 +198,8 @@ fn main() -> Result<()> {
         }
 
         Commands::Ask { prompt } => {
-            let ai = Ai::new("qwen3:1.7b");
+            let ai =
+                Ai::new(std::env::var("ESPRIT_MODEL").unwrap_or_else(|_| "qwen3:1.7b".to_string()));
             ai.health()?;
             println!("{}", esprit_rag::ask(&prompt)?);
         }

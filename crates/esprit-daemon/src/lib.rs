@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossbeam_channel::unbounded;
-use notify::{RecursiveMode, Watcher, recommended_watcher};
+use notify::{recommended_watcher, RecursiveMode, Watcher};
 use std::path::Path;
 
 pub fn run(root: impl AsRef<Path>) -> Result<()> {

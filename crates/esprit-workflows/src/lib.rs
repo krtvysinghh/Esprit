@@ -1,5 +1,5 @@
 use anyhow::Result;
-use esprit_agents::{Agent, run};
+use esprit_agents::{run, Agent};
 
 pub fn explain(prompt: &str) -> Result<String> {
     run(Agent::Chat, prompt)

@@ -1,5 +1,5 @@
 mod doctor;
 mod watch;
 
-pub use doctor::{DoctorReport, doctor};
+pub use doctor::{doctor, DoctorReport};
 pub use watch::watch;

@@ -1,0 +1,22 @@
+pkgname=esprit
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="AI-powered local knowledge engine"
+arch=('x86_64' 'aarch64')
+url="https://github.com/krtvysinghh/Esprit"
+license=('MIT')
+depends=()
+makedepends=('rust')
+
+source=("https://github.com/krtvysinghh/Esprit/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/Esprit-$pkgver"
+    cargo build --release
+}
+
+package() {
+    cd "$srcdir/Esprit-$pkgver"
+    install -Dm755 target/release/esprit "$pkgdir/usr/bin/esprit"
+}

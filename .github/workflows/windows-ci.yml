@@ -1,0 +1,36 @@
+name: Windows CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy -p esprit-cli --all-targets -- -D warnings
+      - run: cargo test -p esprit-cli
+      - run: cargo build -p esprit-cli --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist
+          Copy-Item target/release/esprit.exe dist/esprit.exe
+          Compress-Archive -Path dist/esprit.exe -DestinationPath esprit-0.1.0-windows-x86_64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: esprit-windows-x86_64
+          path: esprit-0.1.0-windows-x86_64.zip
