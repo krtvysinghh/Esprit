@@ -13,15 +13,7 @@ members = [
     "crates/esprit-workflows",
     "crates/esprit-plugins",
     "crates/esprit-vectors",
-    "crates/esprit-semantic",
-    "crates/esprit-ranking",
-    "crates/esprit-bench",
-    "crates/esprit-metrics",
-    "crates/esprit-config2",
-    "crates/esprit-testing",
-    "crates/esprit-diagnostics",
     "crates/esprit-codeintel",
-    "crates/esprit-analysis",
     "crates/esprit-daemon",
     "crates/esprit-api",
     "crates/esprit-core-index",
@@ -53,6 +45,7 @@ authors = ["Kartavya Singh"]
 rust-version = "1.97.1"
 
 [workspace.dependencies]
+hex = "0.4.3"
 dashmap = "6"
 
 anyhow = "1"
