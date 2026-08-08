@@ -13,4 +13,4 @@ readme = "README.md"
 tauri = { version = "2", features = ["shell-open", "clipboard-manager"] }
 tokio = { version = "1", features = ["full"] }
 esprit-rag = { version = "0.1.0", path = "../crates/esprit-rag" }
-esprit-api = {version = 0.1.0", path = "../crates/esprit-api" }
+esprit-api = {version = "0.1.0", path = "../crates/esprit-api" }
