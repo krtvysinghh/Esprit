@@ -1,0 +1,22 @@
+name: esprit
+base: core24
+version: '0.1.0'
+summary: AI-powered local knowledge engine
+description: |
+  Esprit is an AI-powered local knowledge engine.
+
+grade: stable
+confinement: strict
+
+apps:
+  esprit:
+    command: bin/esprit
+    plugs:
+      - home
+      - network
+      - removable-media
+
+parts:
+  esprit:
+    plugin: rust
+    source: ../../../
