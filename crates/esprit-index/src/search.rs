@@ -2,7 +2,7 @@ use crate::{all_files, content::extract, schema::build};
 use anyhow::Result;
 use directories::ProjectDirs;
 use std::{fs, path::PathBuf};
-use tantivy::{Index, TantivyDocument, collector::TopDocs, doc, query::QueryParser, schema::Value};
+use tantivy::{collector::TopDocs, doc, query::QueryParser, schema::Value, Index, TantivyDocument};
 
 fn index_dir() -> Result<PathBuf> {
     let dirs = ProjectDirs::from("dev", "esprit", "esprit")
@@ -70,10 +70,12 @@ pub fn search(query: &str) -> Result<Vec<String>> {
     for (_, addr) in docs {
         let doc: TantivyDocument = searcher.doc(addr)?;
 
-        if let Some(v) = doc.get_first(path) {
-            if let Some(s) = v.as_str() {
         {
-            out.push(s.to_string());
+            if let Some(v) = doc.get_first(path) {
+                if let Some(s) = v.as_str() {
+                    results.push(s.to_string());
+                }
+            }
         }
     }
 

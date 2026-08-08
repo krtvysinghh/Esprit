@@ -1,4 +1,4 @@
-use crate::{IndexedFile, database::open_database};
+use crate::{database::open_database, IndexedFile};
 use anyhow::Result;
 use rusqlite::params;
 use std::path::Path;
