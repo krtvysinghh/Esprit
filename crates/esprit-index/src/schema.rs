@@ -13,5 +13,12 @@ pub fn build() -> (Schema, Fields) {
     let name = builder.add_text_field("name", TEXT);
     let content = builder.add_text_field("content", TEXT);
 
-    (builder.build(), Fields { path, name, content })
+    (
+        builder.build(),
+        Fields {
+            path,
+            name,
+            content,
+        },
+    )
 }

@@ -16,7 +16,11 @@ pub struct DoctorReport {
 }
 
 fn exists(cmd: &str) -> bool {
-    Command::new("which").arg(cmd).output().map(|o| o.status.success()).unwrap_or(false)
+    Command::new("which")
+        .arg(cmd)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
 }
 
 pub fn doctor() -> DoctorReport {
@@ -27,7 +31,11 @@ pub fn doctor() -> DoctorReport {
         os: System::name().unwrap_or_default(),
         kernel: System::kernel_version().unwrap_or_default(),
         hostname: System::host_name().unwrap_or_default(),
-        cpu: sys.cpus().first().map(|c| c.brand().to_string()).unwrap_or_default(),
+        cpu: sys
+            .cpus()
+            .first()
+            .map(|c| c.brand().to_string())
+            .unwrap_or_default(),
         cpu_cores: sys.cpus().len(),
         ram_gb: sys.total_memory() as f64 / 1024.0 / 1024.0 / 1024.0,
         rust: exists("rustc"),

@@ -16,6 +16,9 @@ pub struct SearchEngine;
 
 impl SearchEngine {
     pub fn run(options: SearchOptions) -> Result<Vec<SearchResult>> {
-        Ok(search(&options.pattern)?.into_iter().map(|p| SearchResult { path: p }).collect())
+        Ok(search(&options.pattern)?
+            .into_iter()
+            .map(|p| SearchResult { path: p })
+            .collect())
     }
 }

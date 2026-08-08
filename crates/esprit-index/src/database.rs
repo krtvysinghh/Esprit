@@ -53,7 +53,10 @@ pub fn update_file(path: impl AsRef<Path>) -> Result<()> {
 pub fn delete_file(path: impl AsRef<Path>) -> Result<()> {
     let conn = open_database()?;
 
-    conn.execute("DELETE FROM files WHERE path=?1", params![path.as_ref().to_string_lossy()])?;
+    conn.execute(
+        "DELETE FROM files WHERE path=?1",
+        params![path.as_ref().to_string_lossy()],
+    )?;
 
     Ok(())
 }

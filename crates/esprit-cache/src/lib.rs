@@ -7,7 +7,9 @@ pub struct Cache<K: Eq + Hash, V> {
 
 impl<K: Eq + Hash, V> Default for Cache<K, V> {
     fn default() -> Self {
-        Self { inner: DashMap::new() }
+        Self {
+            inner: DashMap::new(),
+        }
     }
 }
 

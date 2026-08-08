@@ -8,7 +8,10 @@ pub fn all_files() -> Result<Vec<IndexedFile>> {
     let mut stmt = conn.prepare("SELECT path,size FROM files ORDER BY path")?;
 
     let rows = stmt.query_map([], |row| {
-        Ok(IndexedFile { path: PathBuf::from(row.get::<_, String>(0)?), size: row.get(1)? })
+        Ok(IndexedFile {
+            path: PathBuf::from(row.get::<_, String>(0)?),
+            size: row.get(1)?,
+        })
     })?;
 
     let mut files = Vec::new();

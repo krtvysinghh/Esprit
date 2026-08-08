@@ -16,7 +16,9 @@ impl Default for Config {
         Self {
             ai_model: "qwen3:1.7b".into(),
             workspace: std::env::current_dir().unwrap(),
-            threads: std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4),
+            threads: std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(4),
             color: true,
         }
     }

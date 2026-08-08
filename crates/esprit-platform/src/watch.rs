@@ -20,7 +20,10 @@ enum Pending {
 }
 
 fn ignored(path: &Path) -> bool {
-    path.file_name().and_then(|n| n.to_str()).map(|n| n.starts_with('.')).unwrap_or(false)
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .map(|n| n.starts_with('.'))
+        .unwrap_or(false)
 }
 
 pub fn watch(root: impl AsRef<Path>) -> Result<()> {

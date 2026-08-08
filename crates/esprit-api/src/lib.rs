@@ -25,5 +25,7 @@ async fn ask(Json(req): Json<Ask>) -> Json<Reply> {
 }
 
 pub fn router() -> Router {
-    Router::new().route("/health", get(health)).route("/ask", post(ask))
+    Router::new()
+        .route("/health", get(health))
+        .route("/ask", post(ask))
 }

@@ -17,7 +17,11 @@ pub fn extract(path: &Path) -> String {
         return String::new();
     }
 
-    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
 
     if !TEXT_EXTENSIONS.contains(&ext.as_str()) {
         return String::new();

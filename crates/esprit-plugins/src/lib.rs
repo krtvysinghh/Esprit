@@ -11,7 +11,9 @@ pub struct Registry {
 
 impl Registry {
     pub fn new() -> Self {
-        Self { plugins: Vec::new() }
+        Self {
+            plugins: Vec::new(),
+        }
     }
 
     pub fn register<P: Plugin + 'static>(&mut self, plugin: P) {

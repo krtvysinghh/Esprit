@@ -21,12 +21,15 @@ pub struct Ai {
 
 impl Ai {
     pub fn new(model: impl Into<String>) -> Self {
-        Self { client: Client::new(), model: model.into() }
+        Self {
+            client: Client::new(),
+            model: model.into(),
+        }
     }
 
     pub fn health(&self) -> Result<()> {
         self.client
-            .get(&format!(
+            .get(format!(
                 "{}/api/tags",
                 std::env::var("OLLAMA_URL")
                     .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
@@ -39,12 +42,16 @@ impl Ai {
     pub fn ask(&self, prompt: &str) -> Result<String> {
         let res: GenerateResponse = self
             .client
-            .post(&format!(
+            .post(format!(
                 "{}/api/generate",
                 std::env::var("OLLAMA_URL")
                     .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
             ))
-            .json(&GenerateRequest { model: &self.model, prompt, stream: false })
+            .json(&GenerateRequest {
+                model: &self.model,
+                prompt,
+                stream: false,
+            })
             .send()?
             .json()?;
 

@@ -12,8 +12,12 @@ pub struct FolderStats {
 
 impl FolderStats {
     pub fn scan(root: impl AsRef<Path>) -> Result<Self> {
-        let mut stats =
-            FolderStats { files: 0, directories: 0, bytes: 0, extensions: HashMap::new() };
+        let mut stats = FolderStats {
+            files: 0,
+            directories: 0,
+            bytes: 0,
+            extensions: HashMap::new(),
+        };
 
         for entry in WalkDir::new(root) {
             let entry = entry?;

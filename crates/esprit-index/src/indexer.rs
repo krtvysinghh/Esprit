@@ -18,7 +18,10 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
             continue;
         }
 
-        let file = IndexedFile { path: entry.path().to_path_buf(), size: entry.metadata()?.len() };
+        let file = IndexedFile {
+            path: entry.path().to_path_buf(),
+            size: entry.metadata()?.len(),
+        };
 
         conn.execute(
             "INSERT INTO files(path,size) VALUES(?1,?2)",

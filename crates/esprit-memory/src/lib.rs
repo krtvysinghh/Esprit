@@ -23,8 +23,10 @@ fn db() -> Result<Connection> {
 }
 
 pub fn remember(question: &str, answer: &str) -> Result<()> {
-    db()?
-        .execute("INSERT INTO memory(question,answer) VALUES(?1,?2)", params![question, answer])?;
+    db()?.execute(
+        "INSERT INTO memory(question,answer) VALUES(?1,?2)",
+        params![question, answer],
+    )?;
     Ok(())
 }
 
