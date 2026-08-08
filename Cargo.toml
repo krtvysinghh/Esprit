@@ -50,7 +50,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 authors = ["Kartavya Singh"]
-rust-version = "1.88"
+rust-version = "1.97.1"
 
 [workspace.dependencies]
 dashmap = "6"
