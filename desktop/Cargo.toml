@@ -10,7 +10,7 @@ documentation = "https://github.com/krtvysinghh/Esprit"
 readme = "README.md"
 
 [dependencies]
-tauri = { version = "2", features = ["shell-open", "clipboard-manager"] }
+tauri = { version = "2" }
 tokio = { version = "1", features = ["full"] }
 esprit-rag = { version = "0.1.0", path = "../crates/esprit-rag" }
 esprit-api = {version = "0.1.0", path = "../crates/esprit-api" }
