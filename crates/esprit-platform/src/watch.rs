@@ -1,9 +1,8 @@
 use anyhow::Result;
 use esprit_index::{delete_file, insert_file, rename_file, update_file};
 use notify::{
-    Event, EventKind, RecursiveMode, Watcher,
     event::{ModifyKind, RemoveKind, RenameMode},
-    recommended_watcher,
+    recommended_watcher, Event, EventKind, RecursiveMode, Watcher,
 };
 use std::{
     collections::HashMap,

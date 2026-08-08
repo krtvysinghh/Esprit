@@ -1,5 +1,5 @@
 use anyhow::Result;
-use esprit_codeintel::{Symbol, index};
+use esprit_codeintel::{index, Symbol};
 use regex::Regex;
 use std::{collections::HashMap, fs, path::Path};
 use walkdir::WalkDir;

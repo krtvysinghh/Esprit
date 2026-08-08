@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use esprit_agents::{Agent, run};
+use esprit_agents::{run, Agent};
 use esprit_ai::Ai;
 use esprit_config::Config;
 use esprit_filesystem::stats::FolderStats;
