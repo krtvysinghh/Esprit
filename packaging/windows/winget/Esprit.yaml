@@ -1,0 +1,30 @@
+PackageIdentifier: KartavyaSingh.Esprit
+PackageVersion: 0.1.0
+PackageLocale: en-US
+Publisher: Kartavya Singh
+PublisherUrl: https://github.com/krtvysinghh
+PackageName: Esprit
+PackageUrl: https://github.com/krtvysinghh/Esprit
+License: MIT
+ShortDescription: AI-powered local knowledge engine
+Description: Esprit is an AI-powered local knowledge engine designed to search, index, understand, and work with your local knowledge.
+Moniker: esprit
+Tags:
+  - ai
+  - knowledge
+  - search
+  - local
+  - rust
+  - cli
+  - productivity
+InstallerType: zip
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/krtvysinghh/Esprit/releases/download/v0.1.0/esprit-v0.1.0-windows-x86_64.zip
+    InstallerSha256: REPLACE_WITH_RELEASE_SHA256
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: esprit.exe
+        PortableCommandAlias: esprit
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

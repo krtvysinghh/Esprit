@@ -1,0 +1,23 @@
+{
+  "version": "0.1.0",
+  "description": "AI-powered local knowledge engine",
+  "homepage": "https://github.com/krtvysinghh/Esprit",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/krtvysinghh/Esprit/releases/download/v0.1.0/esprit-v0.1.0-windows-x86_64.zip",
+      "hash": "REPLACE_WITH_RELEASE_SHA256"
+    }
+  },
+  "bin": "esprit.exe",
+  "checkver": {
+    "github": "https://github.com/krtvysinghh/Esprit"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/krtvysinghh/Esprit/releases/download/v$version/esprit-v$version-windows-x86_64.zip"
+      }
+    }
+  }
+}
