@@ -10,3 +10,13 @@ coverage/
 .idea/
 .env
 target/
+release/
+*.tar.gz
+*.zip
+*.7z
+*.rar
+*.dmg
+*.msi
+*.exe
+*.deb
+*.rpm
