@@ -8,7 +8,6 @@ repository = "https://github.com/krtvysinghh/Esprit"
 homepage = "https://github.com/krtvysinghh/Esprit"
 documentation = "https://github.com/krtvysinghh/Esprit"
 readme = "README.md"
-license.workspace = true
 
 [[bin]]
 name = "esprit"
