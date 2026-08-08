@@ -1097,16 +1097,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "esprit-analysis"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "esprit-codeintel",
- "regex",
- "walkdir",
-]
-
-[[package]]
 name = "esprit-api"
 version = "0.1.0"
 dependencies = [
@@ -1130,19 +1120,6 @@ dependencies = [
  "esprit-index",
  "esprit-rag",
  "esprit-workflows",
-]
-
-[[package]]
-name = "esprit-bench"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "esprit-index",
- "esprit-ranking",
- "esprit-semantic",
- "serde",
- "serde_json",
- "walkdir",
 ]
 
 [[package]]
@@ -1187,15 +1164,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "directories",
- "serde",
- "toml 0.9.12+spec-1.1.0",
-]
-
-[[package]]
-name = "esprit-config2"
-version = "0.1.0"
-dependencies = [
- "anyhow",
  "serde",
  "toml 0.9.12+spec-1.1.0",
 ]
@@ -1246,13 +1214,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "esprit-diagnostics"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "esprit-embeddings"
 version = "0.1.0"
 dependencies = [
@@ -1298,13 +1259,6 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "esprit-metrics"
-version = "0.1.0"
-dependencies = [
- "parking_lot",
 ]
 
 [[package]]
@@ -1363,14 +1317,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "esprit-ranking"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "serde",
-]
-
-[[package]]
 name = "esprit-search"
 version = "0.1.0"
 dependencies = [
@@ -1384,17 +1330,6 @@ version = "0.1.0"
 dependencies = [
  "hex",
  "sha2 0.10.9",
-]
-
-[[package]]
-name = "esprit-semantic"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dashmap",
- "esprit-embeddings",
- "esprit-vectors",
- "rayon",
 ]
 
 [[package]]
@@ -1413,13 +1348,6 @@ dependencies = [
  "anyhow",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "esprit-testing"
-version = "0.1.0"
-dependencies = [
- "anyhow",
 ]
 
 [[package]]
