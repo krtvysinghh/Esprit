@@ -26,7 +26,11 @@ impl Ai {
 
     pub fn health(&self) -> Result<()> {
         self.client
-            .get("http://127.0.0.1:11434/api/tags")
+            .get(&format!(
+                "{}/api/tags",
+                std::env::var("OLLAMA_URL")
+                    .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
+            ))
             .send()
             .map_err(|_| anyhow!("Ollama is not running"))?;
         Ok(())
@@ -35,7 +39,11 @@ impl Ai {
     pub fn ask(&self, prompt: &str) -> Result<String> {
         let res: GenerateResponse = self
             .client
-            .post("http://127.0.0.1:11434/api/generate")
+            .post(&format!(
+                "{}/api/generate",
+                std::env::var("OLLAMA_URL")
+                    .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
+            ))
             .json(&GenerateRequest { model: &self.model, prompt, stream: false })
             .send()?
             .json()?;

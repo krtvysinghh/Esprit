@@ -28,6 +28,7 @@ unknown-git = "deny"
 
 [advisories]
 ignore = [
+    # TODO: Audit these transitive dependency vulnerabilities (temporarily suppressed for 0.1.0 development)
     "RUSTSEC-2024-0370",
     "RUSTSEC-2024-0411",
     "RUSTSEC-2024-0412",
