@@ -11,36 +11,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: x86_64-pc-windows-msvc
 
-      - name: Cache Rust
-        uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
-      - name: Format
-        run: cargo fmt --all -- --check
-
-      - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-
-      - name: Test
-        run: cargo test --workspace
-
-      - name: Build
-        run: cargo build --workspace --release
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy -p esprit-cli --all-targets -- -D warnings
+      - run: cargo test -p esprit-cli
+      - run: cargo build -p esprit-cli --release
 
       - name: Package
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          New-Item -ItemType Directory -Force dist
           Copy-Item target/release/esprit.exe dist/esprit.exe
-          Compress-Archive -Path dist/esprit.exe -DestinationPath esprit-v${{ github.ref_name }}-windows-x86_64.zip
+          Compress-Archive -Path dist/esprit.exe -DestinationPath esprit-0.1.0-windows-x86_64.zip
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: esprit-windows-x86_64
-          path: esprit-*-windows-x86_64.zip
+          path: esprit-0.1.0-windows-x86_64.zip

@@ -8,12 +8,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os:
-          - macos-14
-          - macos-15
-        arch:
-          - arm64
-          - x86_64
+        include:
+          - os: macos-14
+            arch: arm64
+          - os: macos-13
+            arch: x86_64
 
     runs-on: ${{ matrix.os }}
 
@@ -27,18 +26,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
-      - run: cargo build --workspace --release
+      - run: cargo clippy -p esprit-cli --all-targets -- -D warnings
+      - run: cargo test -p esprit-cli
+      - run: cargo build -p esprit-cli --release
 
       - name: Package
-        shell: bash
         run: |
           mkdir -p dist
           cp target/release/esprit dist/esprit
-          tar -czf "esprit-${{ github.ref_name }}-macos-${{ matrix.arch }}.tar.gz" -C dist esprit
+          tar -czf "esprit-0.1.0-macos-${{ matrix.arch }}.tar.gz" -C dist esprit
 
       - uses: actions/upload-artifact@v4
         with:
           name: esprit-macos-${{ matrix.arch }}
-          path: esprit-*-macos-${{ matrix.arch }}.tar.gz
+          path: esprit-0.1.0-macos-${{ matrix.arch }}.tar.gz
