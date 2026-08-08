@@ -1,0 +1,13 @@
+pkgname=esprit-bin
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Modular AI and filesystem intelligence workspace engine"
+arch=('x86_64')
+url="https://github.com/krtvysinghh/Esprit"
+license=('MIT')
+source=("https://github.com/krtvysinghh/Esprit/releases/download/v$pkgver/esprit-$pkgver-x86_64-unknown-linux-gnu.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+    install -Dm755 "esprit" "$pkgdir/usr/bin/esprit"
+}

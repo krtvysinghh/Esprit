@@ -1,0 +1,7 @@
+{
+    "version": "0.1.0",
+    "description": "Modular AI and filesystem intelligence workspace engine",
+    "homepage": "https://github.com/krtvysinghh/Esprit",
+    "url": "https://github.com/krtvysinghh/Esprit/releases/download/v0.1.0/esprit-v0.1.0-x86_64-pc-windows-msvc.zip",
+    "bin": "esprit.exe"
+}
