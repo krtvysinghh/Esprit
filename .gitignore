@@ -9,7 +9,6 @@ coverage/
 .vscode/
 .idea/
 .env
-target/
 release/
 *.tar.gz
 *.zip
