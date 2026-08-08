@@ -12,17 +12,17 @@ path = "src/main.rs"
 anyhow.workspace = true
 clap.workspace = true
 
-esprit-core = { path = "../../crates/esprit-core" }
-esprit-config = { path = "../../crates/esprit-config" }
-esprit-platform = { path = "../../crates/esprit-platform" }
-esprit-search = { path = "../../crates/esprit-search" }
-esprit-filesystem = { path = "../../crates/esprit-filesystem" }
-esprit-index = { path = "../../crates/esprit-index" }
+esprit-core = { version = "0.1.0", path = "../../crates/esprit-core" }
+esprit-config = { version = "0.1.0", path = "../../crates/esprit-config" }
+esprit-platform = { version = "0.1.0", path = "../../crates/esprit-platform" }
+esprit-search = { version = "0.1.0", path = "../../crates/esprit-search" }
+esprit-filesystem = { version = "0.1.0", path = "../../crates/esprit-filesystem" }
+esprit-index = { version = "0.1.0", path = "../../crates/esprit-index" }
 
-esprit-ai = { path = "../../crates/esprit-ai" }
+esprit-ai = { version = "0.1.0", path = "../../crates/esprit-ai" }
 
-esprit-rag = { path = "../../crates/esprit-rag" }
+esprit-rag = { version = "0.1.0", path = "../../crates/esprit-rag" }
 
-esprit-agents = { path = "../../crates/esprit-agents" }
+esprit-agents = { version = "0.1.0", path = "../../crates/esprit-agents" }
 
-esprit-workflows = { path = "../../crates/esprit-workflows" }
+esprit-workflows = { version = "0.1.0", path = "../../crates/esprit-workflows" }

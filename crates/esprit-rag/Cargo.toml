@@ -6,9 +6,9 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-esprit-index = { path = "../esprit-index" }
-esprit-ai = { path = "../esprit-ai" }
+esprit-index = { version = "0.1.0", path = "../esprit-index" }
+esprit-ai = { version = "0.1.0", path = "../esprit-ai" }
 
-esprit-embeddings = { path = "../esprit-embeddings" }
+esprit-embeddings = { version = "0.1.0", path = "../esprit-embeddings" }
 
-esprit-memory = { path = "../esprit-memory" }
+esprit-memory = { version = "0.1.0", path = "../esprit-memory" }

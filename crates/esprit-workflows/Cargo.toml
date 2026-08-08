@@ -6,4 +6,4 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-esprit-agents = { path = "../esprit-agents" }
+esprit-agents = { version = "0.1.0", path = "../esprit-agents" }

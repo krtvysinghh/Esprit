@@ -8,4 +8,4 @@ license.workspace=true
 anyhow.workspace=true
 notify.workspace=true
 crossbeam-channel="0.5"
-esprit-index={path="../esprit-index"}
+esprit-index={version = "0.1.0", path = "../esprit-index" }

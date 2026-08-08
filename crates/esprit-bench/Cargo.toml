@@ -9,6 +9,6 @@ anyhow.workspace=true
 serde.workspace=true
 serde_json.workspace=true
 walkdir.workspace=true
-esprit-index={path="../esprit-index"}
-esprit-semantic={path="../esprit-semantic"}
-esprit-ranking={path="../esprit-ranking"}
+esprit-index={version = "0.1.0", path = "../esprit-index" }
+esprit-semantic={version = "0.1.0", path = "../esprit-semantic" }
+esprit-ranking={version = "0.1.0", path = "../esprit-ranking" }
