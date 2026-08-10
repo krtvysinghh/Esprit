@@ -6,3 +6,9 @@ pub struct IndexedFile {
     pub size: u64,
     pub modified: u64,
 }
+
+#[derive(Debug, Clone)]
+pub struct SearchResult {
+    pub path: PathBuf,
+    pub score: f32,
+}
