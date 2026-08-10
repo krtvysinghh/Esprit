@@ -6,7 +6,7 @@ mod query;
 mod schema;
 mod search;
 
-pub use database::{delete_file, insert_file, rename_file, update_file};
+pub use database::{delete_file, insert_file, rename_file, update_file, IndexDatabase};
 pub use indexer::index;
 pub use model::IndexedFile;
 pub use query::all_files;

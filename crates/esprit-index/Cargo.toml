@@ -15,3 +15,18 @@ walkdir.workspace = true
 directories.workspace = true
 rusqlite.workspace = true
 tantivy.workspace = true
+
+[dev-dependencies]
+criterion = "0.7"
+
+[[bench]]
+name = "index_bench"
+harness = false
+
+[[bench]]
+name = "query_bench"
+harness = false
+
+[[bench]]
+name = "database_bench"
+harness = false

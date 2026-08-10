@@ -14,64 +14,99 @@ pub(crate) fn database_path() -> Result<PathBuf> {
     Ok(dirs.data_dir().join("index.db"))
 }
 
-pub(crate) fn open_database() -> Result<Connection> {
-    let conn = Connection::open(database_path()?)?;
-
-    conn.execute_batch(
-        "
-        CREATE TABLE IF NOT EXISTS files(
-            path TEXT PRIMARY KEY,
-            size INTEGER NOT NULL
-        );
-        ",
-    )?;
-
-    Ok(conn)
+pub struct IndexDatabase {
+    conn: Connection,
 }
 
-pub fn insert_file(path: impl AsRef<Path>) -> Result<()> {
-    let path = path.as_ref();
+impl IndexDatabase {
+    pub fn open() -> Result<Self> {
+        let conn = Connection::open(database_path()?)?;
 
-    if !path.is_file() {
-        return Ok(());
+        conn.execute_batch(
+            "
+            CREATE TABLE IF NOT EXISTS files(
+                path TEXT PRIMARY KEY,
+                size INTEGER NOT NULL
+            );
+            ",
+        )?;
+
+        Ok(Self { conn })
     }
 
-    let conn = open_database()?;
+    pub fn insert_file(&self, path: impl AsRef<Path>) -> Result<()> {
+        let path = path.as_ref();
 
-    conn.execute(
-        "INSERT OR REPLACE INTO files(path,size) VALUES(?1,?2)",
-        params![path.to_string_lossy(), path.metadata()?.len()],
-    )?;
+        if !path.is_file() {
+            return Ok(());
+        }
 
-    Ok(())
-}
+        let mut statement = self
+            .conn
+            .prepare_cached("INSERT OR REPLACE INTO files(path,size) VALUES(?1,?2)")?;
 
-pub fn update_file(path: impl AsRef<Path>) -> Result<()> {
-    insert_file(path)
-}
+        statement.execute(params![path.to_string_lossy(), path.metadata()?.len()])?;
 
-pub fn delete_file(path: impl AsRef<Path>) -> Result<()> {
-    let conn = open_database()?;
+        Ok(())
+    }
 
-    conn.execute(
-        "DELETE FROM files WHERE path=?1",
-        params![path.as_ref().to_string_lossy()],
-    )?;
+    pub fn update_file(&self, path: impl AsRef<Path>) -> Result<()> {
+        let path = path.as_ref();
 
-    Ok(())
-}
+        if !path.is_file() {
+            return Ok(());
+        }
 
-pub fn rename_file(old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
-    let conn = open_database()?;
+        let mut statement = self
+            .conn
+            .prepare_cached("UPDATE files SET size=?1 WHERE path=?2")?;
 
-    conn.execute(
-        "UPDATE files SET path=?1,size=?2 WHERE path=?3",
-        params![
+        statement.execute(params![path.metadata()?.len(), path.to_string_lossy()])?;
+
+        Ok(())
+    }
+
+    pub fn delete_file(&self, path: impl AsRef<Path>) -> Result<()> {
+        let mut statement = self
+            .conn
+            .prepare_cached("DELETE FROM files WHERE path=?1")?;
+
+        statement.execute(params![path.as_ref().to_string_lossy()])?;
+
+        Ok(())
+    }
+
+    pub fn rename_file(&self, old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
+        let mut statement = self
+            .conn
+            .prepare_cached("UPDATE files SET path=?1,size=?2 WHERE path=?3")?;
+
+        statement.execute(params![
             new.as_ref().to_string_lossy(),
             new.as_ref().metadata()?.len(),
             old.as_ref().to_string_lossy()
-        ],
-    )?;
+        ])?;
 
-    Ok(())
+        Ok(())
+    }
+}
+
+pub(crate) fn open_database() -> Result<Connection> {
+    Ok(IndexDatabase::open()?.conn)
+}
+
+pub fn insert_file(path: impl AsRef<Path>) -> Result<()> {
+    IndexDatabase::open()?.insert_file(path)
+}
+
+pub fn update_file(path: impl AsRef<Path>) -> Result<()> {
+    IndexDatabase::open()?.update_file(path)
+}
+
+pub fn delete_file(path: impl AsRef<Path>) -> Result<()> {
+    IndexDatabase::open()?.delete_file(path)
+}
+
+pub fn rename_file(old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
+    IndexDatabase::open()?.rename_file(old, new)
 }
