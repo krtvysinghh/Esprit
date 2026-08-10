@@ -28,6 +28,21 @@ impl IndexDatabase {
                 path TEXT PRIMARY KEY,
                 size INTEGER NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS file_links(
+                source TEXT NOT NULL,
+                target TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                PRIMARY KEY(source, target, kind),
+                FOREIGN KEY(source) REFERENCES files(path) ON DELETE CASCADE,
+                FOREIGN KEY(target) REFERENCES files(path) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_file_links_source
+                ON file_links(source);
+
+            CREATE INDEX IF NOT EXISTS idx_file_links_target
+                ON file_links(target);
             ",
         )?;
 
