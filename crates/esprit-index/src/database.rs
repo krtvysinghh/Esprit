@@ -26,7 +26,8 @@ impl IndexDatabase {
             "
             CREATE TABLE IF NOT EXISTS files(
                 path TEXT PRIMARY KEY,
-                size INTEGER NOT NULL
+                size INTEGER NOT NULL,
+                modified INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS file_links(
@@ -46,6 +47,20 @@ impl IndexDatabase {
             ",
         )?;
 
+        let has_modified: bool = conn
+            .prepare("PRAGMA table_info(files)")?
+            .query_map([], |row| row.get::<_, String>(1))?
+            .collect::<rusqlite::Result<Vec<_>>>()?
+            .iter()
+            .any(|name| name == "modified");
+
+        if !has_modified {
+            conn.execute(
+                "ALTER TABLE files ADD COLUMN modified INTEGER NOT NULL DEFAULT 0",
+                [],
+            )?;
+        }
+
         Ok(Self { conn })
     }
 
@@ -58,9 +73,15 @@ impl IndexDatabase {
 
         let mut statement = self
             .conn
-            .prepare_cached("INSERT OR REPLACE INTO files(path,size) VALUES(?1,?2)")?;
+            .prepare_cached("INSERT OR REPLACE INTO files(path,size,modified) VALUES(?1,?2,?3)")?;
 
-        statement.execute(params![path.to_string_lossy(), path.metadata()?.len()])?;
+        let metadata = path.metadata()?;
+        let modified = metadata
+            .modified()?
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_secs();
+
+        statement.execute(params![path.to_string_lossy(), metadata.len(), modified])?;
 
         Ok(())
     }
@@ -74,9 +95,15 @@ impl IndexDatabase {
 
         let mut statement = self
             .conn
-            .prepare_cached("UPDATE files SET size=?1 WHERE path=?2")?;
+            .prepare_cached("UPDATE files SET size=?1,modified=?2 WHERE path=?3")?;
 
-        statement.execute(params![path.metadata()?.len(), path.to_string_lossy()])?;
+        let metadata = path.metadata()?;
+        let modified = metadata
+            .modified()?
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_secs();
+
+        statement.execute(params![metadata.len(), modified, path.to_string_lossy()])?;
 
         Ok(())
     }
