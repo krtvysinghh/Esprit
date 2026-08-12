@@ -30,6 +30,20 @@ impl IndexDatabase {
                 modified INTEGER NOT NULL DEFAULT 0
             );
 
+            CREATE TABLE IF NOT EXISTS file_relations(
+                source TEXT NOT NULL,
+                target TEXT NOT NULL,
+                relation TEXT NOT NULL,
+                PRIMARY KEY(source,target,relation)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_file_relations_source
+                ON file_relations(source);
+
+            CREATE INDEX IF NOT EXISTS idx_file_relations_target
+                ON file_relations(target);
+
+
             CREATE TABLE IF NOT EXISTS file_links(
                 source TEXT NOT NULL,
                 target TEXT NOT NULL,
@@ -104,6 +118,49 @@ impl IndexDatabase {
             .as_secs();
 
         statement.execute(params![metadata.len(), modified, path.to_string_lossy()])?;
+
+        Ok(())
+    }
+
+    pub fn add_relation(
+        &self,
+        source: impl AsRef<Path>,
+        target: impl AsRef<Path>,
+        relation: impl AsRef<str>,
+    ) -> Result<()> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO file_relations(source,target,relation)
+             VALUES(?1,?2,?3)",
+            params![
+                source.as_ref().to_string_lossy().to_string(),
+                target.as_ref().to_string_lossy().to_string(),
+                relation.as_ref()
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn remove_relations(&self, source: impl AsRef<Path>) -> Result<()> {
+        self.conn.execute(
+            "DELETE FROM file_relations WHERE source=?1",
+            params![source.as_ref().to_string_lossy().to_string()],
+        )?;
+        Ok(())
+    }
+
+    pub fn verify_integrity(&self) -> Result<()> {
+        self.conn.execute_batch(
+            "PRAGMA foreign_keys=ON;
+             PRAGMA integrity_check;",
+        )?;
+
+        let result: String = self
+            .conn
+            .query_row("PRAGMA integrity_check", [], |row| row.get(0))?;
+
+        if result != "ok" {
+            return Err(anyhow::anyhow!("SQLite integrity check failed: {}", result));
+        }
 
         Ok(())
     }

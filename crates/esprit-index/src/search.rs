@@ -238,6 +238,7 @@ pub fn ranked_search(query: &str, limit: usize) -> Result<Vec<crate::SearchResul
                 results.push(crate::SearchResult {
                     path: std::path::PathBuf::from(path),
                     score,
+                    snippet: None,
                 });
             }
         }
@@ -300,6 +301,200 @@ pub fn remove_search_document(path: impl AsRef<std::path::Path>) -> Result<()> {
     writer.commit()?;
 
     Ok(())
+}
+
+pub fn search_with_metadata(query: &str, limit: usize) -> Result<Vec<crate::SearchResult>> {
+    let query = query.trim();
+
+    if query.is_empty() || limit == 0 {
+        return Ok(Vec::new());
+    }
+
+    let index = Index::open_in_dir(index_dir()?)?;
+    let schema = index.schema();
+    let path = schema.get_field("path")?;
+    let name = schema.get_field("name")?;
+    let content = schema.get_field("content")?;
+
+    let reader = index.reader()?;
+    let searcher = reader.searcher();
+    let parser = QueryParser::for_index(&index, vec![name, content]);
+    let parsed = parser.parse_query(query)?;
+    let docs = searcher.search(&parsed, &TopDocs::with_limit(limit.min(1000)))?;
+
+    let mut results = Vec::with_capacity(docs.len());
+
+    for (score, addr) in docs {
+        let doc: TantivyDocument = searcher.doc(addr)?;
+
+        let Some(path_value) = doc.get_first(path) else {
+            continue;
+        };
+
+        let Some(path_string) = path_value.as_str() else {
+            continue;
+        };
+
+        let snippet = doc
+            .get_first(content)
+            .and_then(|value| value.as_str())
+            .map(|text| {
+                let text = text.trim();
+                let max = 240usize;
+                if text.len() <= max {
+                    text.to_string()
+                } else {
+                    format!("{}…", &text[..max])
+                }
+            });
+
+        results.push(crate::SearchResult {
+            path: std::path::PathBuf::from(path_string),
+            score,
+            snippet,
+        });
+    }
+
+    Ok(results)
+}
+
+pub fn filtered_search(
+    query: &str,
+    filters: &crate::SearchFilters,
+    limit: usize,
+) -> Result<Vec<crate::SearchResult>> {
+    let mut results = search_with_metadata(query, limit.min(1000))?;
+
+    results.retain(|result| {
+        let path = &result.path;
+
+        if let Some(extension) = &filters.extension {
+            let wanted = extension.trim_start_matches('.').to_ascii_lowercase();
+            let actual = path
+                .extension()
+                .and_then(|value| value.to_str())
+                .unwrap_or("")
+                .to_ascii_lowercase();
+
+            if actual != wanted {
+                return false;
+            }
+        }
+
+        if let Some(fragment) = &filters.path_contains {
+            if !path
+                .to_string_lossy()
+                .to_ascii_lowercase()
+                .contains(&fragment.to_ascii_lowercase())
+            {
+                return false;
+            }
+        }
+
+        let Ok(metadata) = std::fs::metadata(path) else {
+            return false;
+        };
+
+        let size = metadata.len();
+
+        if let Some(min_size) = filters.min_size {
+            if size < min_size {
+                return false;
+            }
+        }
+
+        if let Some(max_size) = filters.max_size {
+            if size > max_size {
+                return false;
+            }
+        }
+
+        let modified = metadata.modified().ok();
+
+        if let Some(after) = filters.modified_after {
+            if modified.map(|value| value <= after).unwrap_or(true) {
+                return false;
+            }
+        }
+
+        if let Some(before) = filters.modified_before {
+            if modified.map(|value| value >= before).unwrap_or(true) {
+                return false;
+            }
+        }
+
+        true
+    });
+
+    results.truncate(limit.min(1000));
+    Ok(results)
+}
+
+pub fn cached_search(query: &str, limit: usize) -> Result<Vec<crate::SearchResult>> {
+    use std::sync::{Mutex, OnceLock};
+
+    static CACHE: OnceLock<
+        Mutex<std::collections::HashMap<String, (std::time::Instant, Vec<crate::SearchResult>)>>,
+    > = OnceLock::new();
+
+    let cache = CACHE.get_or_init(|| Mutex::new(std::collections::HashMap::new()));
+    let key = format!("{}:{}", query.trim(), limit.min(1000));
+
+    {
+        let guard = cache
+            .lock()
+            .map_err(|_| anyhow::anyhow!("search cache lock poisoned"))?;
+
+        if let Some((created, results)) = guard.get(&key) {
+            if created.elapsed() < std::time::Duration::from_secs(30) {
+                return Ok(results.clone());
+            }
+        }
+    }
+
+    let results = search_with_metadata(query, limit.min(1000))?;
+
+    {
+        let mut guard = cache
+            .lock()
+            .map_err(|_| anyhow::anyhow!("search cache lock poisoned"))?;
+
+        if guard.len() >= 128 {
+            if let Some(oldest) = guard
+                .iter()
+                .min_by_key(|(_, (created, _))| *created)
+                .map(|(key, _)| key.clone())
+            {
+                guard.remove(&oldest);
+            }
+        }
+
+        guard.insert(key, (std::time::Instant::now(), results.clone()));
+    }
+
+    Ok(results)
+}
+
+pub fn intelligent_search(query: &str, limit: usize) -> Result<Vec<crate::SearchResult>> {
+    let query = query.trim();
+
+    if query.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let limit = limit.clamp(1, 1000);
+
+    let mut results = cached_search(query, limit)?;
+
+    if results.is_empty() {
+        results = ranked_search(query, limit)?;
+    }
+
+    if results.len() > limit {
+        results.truncate(limit);
+    }
+
+    Ok(results)
 }
 
 pub fn search(query: &str) -> Result<Vec<String>> {
