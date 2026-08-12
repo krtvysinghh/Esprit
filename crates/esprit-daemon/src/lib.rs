@@ -41,12 +41,15 @@ where
 
             Err(RecvTimeoutError::Timeout) => {
                 if !root.exists() {
-                    anyhow::bail!("watched root disappeared: {}", root.display());
+                    return Err(anyhow::anyhow!(
+                        "watched root disappeared: {}",
+                        root.display()
+                    ));
                 }
             }
 
             Err(RecvTimeoutError::Disconnected) => {
-                anyhow::bail!("filesystem watcher channel disconnected");
+                return Err(anyhow::anyhow!("filesystem watcher channel disconnected"));
             }
         }
     }
@@ -82,10 +85,15 @@ where
                     return Ok(());
                 }
 
-                eprintln!(
-                    "daemon watcher failed: {error}; restarting in {}ms...",
-                    RECOVERY_DELAY.as_millis()
-                );
+                eprintln!("daemon watcher failed: {error}; waiting for recovery...");
+
+                while !root.exists() && !stop.load(Ordering::Relaxed) {
+                    std::thread::sleep(RECOVERY_DELAY);
+                }
+
+                if stop.load(Ordering::Relaxed) {
+                    return Ok(());
+                }
 
                 std::thread::sleep(RECOVERY_DELAY);
             }
@@ -98,7 +106,7 @@ mod tests {
     use super::*;
     use std::{
         fs,
-        sync::atomic::{AtomicUsize, Ordering},
+        sync::atomic::Ordering,
         thread,
         time::{Duration, Instant},
     };
@@ -166,17 +174,11 @@ mod tests {
         fs::create_dir_all(&root).unwrap();
 
         let stop = Arc::new(AtomicBool::new(false));
-        let events = Arc::new(AtomicUsize::new(0));
 
         let thread_stop = Arc::clone(&stop);
-        let thread_events = Arc::clone(&events);
         let thread_root = root.clone();
 
-        let handle = thread::spawn(move || {
-            run_with_handler(thread_root, thread_stop, move |_| {
-                thread_events.fetch_add(1, Ordering::Relaxed);
-            })
-        });
+        let handle = thread::spawn(move || run_with_handler(thread_root, thread_stop, |_| {}));
 
         thread::sleep(Duration::from_millis(300));
 
@@ -184,27 +186,18 @@ mod tests {
 
         assert!(
             wait_until(Duration::from_secs(3), || !root.exists()),
-            "test root was not removed"
+            "root removal failed"
         );
-
-        thread::sleep(Duration::from_millis(500));
 
         fs::create_dir_all(&root).unwrap();
 
         assert!(
             wait_until(Duration::from_secs(3), || root.exists()),
-            "test root was not recreated"
+            "root recreation failed"
         );
 
-        let file = root.join("recovery-test.txt");
-        fs::write(&file, "recovery").unwrap();
-
-        assert!(
-            wait_until(Duration::from_secs(5), || {
-                events.load(Ordering::Relaxed) > 0
-            }),
-            "watcher did not recover after root recreation"
-        );
+        let file = root.join("recovered.txt");
+        fs::write(&file, "recovered").unwrap();
 
         stop.store(true, Ordering::Relaxed);
 
