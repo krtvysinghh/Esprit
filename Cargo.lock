@@ -1190,6 +1190,7 @@ dependencies = [
  "esprit-api",
  "esprit-config",
  "esprit-index",
+ "esprit-production",
  "esprit-rag",
  "esprit-workflows",
 ]
