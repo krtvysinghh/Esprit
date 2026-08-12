@@ -5,3 +5,4 @@ pub mod stats;
 
 pub use duplicates::duplicates;
 pub use organize::organize;
+pub use stats::FolderStats;
