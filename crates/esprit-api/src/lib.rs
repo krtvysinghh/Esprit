@@ -19,7 +19,21 @@ async fn health() -> &'static str {
 }
 
 async fn ask(Json(req): Json<Ask>) -> Json<Reply> {
-    let answer = esprit_rag::ask(&req.prompt).unwrap_or_else(|e| e.to_string());
+    let prompt = req.prompt.trim();
+
+    if prompt.is_empty() {
+        return Json(Reply {
+            answer: "Prompt cannot be empty.".to_string(),
+        });
+    }
+
+    if prompt.len() > 10000 {
+        return Json(Reply {
+            answer: "Prompt exceeds maximum allowed size.".to_string(),
+        });
+    }
+
+    let answer = esprit_rag::ask(prompt).unwrap_or_else(|_| "AI request failed.".to_string());
 
     Json(Reply { answer })
 }

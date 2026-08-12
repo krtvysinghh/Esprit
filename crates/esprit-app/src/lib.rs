@@ -10,7 +10,10 @@ impl Default for App {
 
 impl App {
     pub fn boot() -> Result<Self> {
+        esprit_production::init()?;
+
         let _ = esprit_config::Config::load()?;
+
         Ok(Self)
     }
 }
