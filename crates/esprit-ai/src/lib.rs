@@ -17,23 +17,25 @@ struct GenerateResponse {
 pub struct Ai {
     client: Client,
     model: String,
+    endpoint: String,
 }
 
 impl Ai {
     pub fn new(model: impl Into<String>) -> Self {
         Self {
-            client: Client::new(),
+            client: Client::builder()
+                .timeout(std::time::Duration::from_secs(120))
+                .build()
+                .expect("failed to create http client"),
             model: model.into(),
+            endpoint: std::env::var("OLLAMA_URL")
+                .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string()),
         }
     }
 
     pub fn health(&self) -> Result<()> {
         self.client
-            .get(format!(
-                "{}/api/tags",
-                std::env::var("OLLAMA_URL")
-                    .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
-            ))
+            .get(format!("{}/api/tags", self.endpoint))
             .send()
             .map_err(|_| anyhow!("Ollama is not running"))?;
         Ok(())
@@ -42,11 +44,7 @@ impl Ai {
     pub fn ask(&self, prompt: &str) -> Result<String> {
         let res: GenerateResponse = self
             .client
-            .post(format!(
-                "{}/api/generate",
-                std::env::var("OLLAMA_URL")
-                    .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string())
-            ))
+            .post(format!("{}/api/generate", self.endpoint))
             .json(&GenerateRequest {
                 model: &self.model,
                 prompt,

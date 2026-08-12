@@ -6,6 +6,12 @@ use esprit_memory::{recall, remember};
 use std::fs;
 
 pub fn ask(question: &str) -> Result<String> {
+    let question = question.trim();
+
+    if question.is_empty() {
+        return Ok("Empty question.".to_string());
+    }
+
     let _ = embed("nomic-embed-text", question)?;
 
     let history = recall(5)?
