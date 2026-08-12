@@ -430,47 +430,75 @@ pub fn filtered_search(
     Ok(results)
 }
 
-pub fn cached_search(query: &str, limit: usize) -> Result<Vec<crate::SearchResult>> {
-    use std::sync::{Mutex, OnceLock};
+struct SearchCache {
+    entries: std::sync::Mutex<
+        std::collections::HashMap<String, (std::time::Instant, Vec<crate::SearchResult>)>,
+    >,
+}
 
-    static CACHE: OnceLock<
-        Mutex<std::collections::HashMap<String, (std::time::Instant, Vec<crate::SearchResult>)>>,
-    > = OnceLock::new();
-
-    let cache = CACHE.get_or_init(|| Mutex::new(std::collections::HashMap::new()));
-    let key = format!("{}:{}", query.trim(), limit.min(1000));
-
-    {
-        let guard = cache
-            .lock()
-            .map_err(|_| anyhow::anyhow!("search cache lock poisoned"))?;
-
-        if let Some((created, results)) = guard.get(&key) {
-            if created.elapsed() < std::time::Duration::from_secs(30) {
-                return Ok(results.clone());
-            }
+impl SearchCache {
+    fn new() -> Self {
+        Self {
+            entries: std::sync::Mutex::new(std::collections::HashMap::new()),
         }
     }
 
-    let results = search_with_metadata(query, limit.min(1000))?;
-
-    {
-        let mut guard = cache
+    fn get(&self, key: &str) -> Result<Option<Vec<crate::SearchResult>>> {
+        let cache = self
+            .entries
             .lock()
             .map_err(|_| anyhow::anyhow!("search cache lock poisoned"))?;
 
-        if guard.len() >= 128 {
-            if let Some(oldest) = guard
+        Ok(cache.get(key).and_then(|(created, results)| {
+            if created.elapsed() < std::time::Duration::from_secs(30) {
+                Some(results.clone())
+            } else {
+                None
+            }
+        }))
+    }
+
+    fn insert(&self, key: String, results: Vec<crate::SearchResult>) -> Result<()> {
+        let mut cache = self
+            .entries
+            .lock()
+            .map_err(|_| anyhow::anyhow!("search cache lock poisoned"))?;
+
+        if cache.len() >= 128 {
+            if let Some(oldest) = cache
                 .iter()
                 .min_by_key(|(_, (created, _))| *created)
                 .map(|(key, _)| key.clone())
             {
-                guard.remove(&oldest);
+                cache.remove(&oldest);
             }
         }
 
-        guard.insert(key, (std::time::Instant::now(), results.clone()));
+        cache.insert(key, (std::time::Instant::now(), results));
+        Ok(())
     }
+}
+
+static SEARCH_CACHE: std::sync::OnceLock<SearchCache> = std::sync::OnceLock::new();
+
+pub fn cached_search(query: &str, limit: usize) -> Result<Vec<crate::SearchResult>> {
+    let query = query.trim();
+
+    if query.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let limit = limit.min(1000);
+    let key = format!("{query}:{limit}");
+
+    let cache = SEARCH_CACHE.get_or_init(SearchCache::new);
+
+    if let Some(results) = cache.get(&key)? {
+        return Ok(results);
+    }
+
+    let results = search_with_metadata(query, limit)?;
+    cache.insert(key, results.clone())?;
 
     Ok(results)
 }
