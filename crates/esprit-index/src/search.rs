@@ -21,36 +21,86 @@ fn index_dir() -> Result<PathBuf> {
 
 pub fn rebuild_search_index() -> Result<()> {
     let dir = index_dir()?;
+    let parent = dir
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("index directory has no parent"))?;
+
+    std::fs::create_dir_all(parent)?;
+
+    let staging = parent.join(format!(
+        ".tantivy-rebuild-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos()
+    ));
+
+    if staging.exists() {
+        std::fs::remove_dir_all(&staging)?;
+    }
+
+    std::fs::create_dir_all(&staging)?;
+
+    let build_result = (|| -> Result<usize> {
+        let (schema, fields) = build();
+        let index = Index::create_in_dir(&staging, schema)?;
+        let mut writer = index.writer(50_000_000)?;
+        let files = all_files()?;
+
+        for file in &files {
+            let filename = file.path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+            writer.add_document(doc!(
+                fields.path => file.path.to_string_lossy().to_string(),
+                fields.name => filename.to_string(),
+                fields.content => extract(&file.path),
+            ))?;
+        }
+
+        writer.commit()?;
+        Ok(files.len())
+    })();
+
+    let file_count = match build_result {
+        Ok(count) => count,
+        Err(error) => {
+            let _ = std::fs::remove_dir_all(&staging);
+            return Err(error);
+        }
+    };
+
+    let backup = parent.join(format!(
+        ".tantivy-old-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos()
+    ));
 
     if dir.exists() {
-        let _ = fs::remove_dir_all(&dir);
+        std::fs::rename(&dir, &backup)?;
     }
 
-    fs::create_dir_all(&dir)?;
+    match std::fs::rename(&staging, &dir) {
+        Ok(()) => {
+            if backup.exists() {
+                let _ = std::fs::remove_dir_all(&backup);
+            }
 
-    let (schema, fields) = build();
+            println!("Indexed {} files.", file_count);
+            Ok(())
+        }
 
-    let index = Index::create_in_dir(&dir, schema)?;
+        Err(error) => {
+            let _ = std::fs::remove_dir_all(&staging);
 
-    let mut writer = index.writer(50_000_000)?;
+            if backup.exists() && !dir.exists() {
+                let _ = std::fs::rename(&backup, &dir);
+            }
 
-    let files = all_files()?;
-
-    for file in &files {
-        let filename = file.path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-
-        writer.add_document(doc!(
-            fields.path => file.path.to_string_lossy().to_string(),
-            fields.name => filename.to_string(),
-            fields.content => extract(&file.path),
-        ))?;
+            Err(error.into())
+        }
     }
-
-    writer.commit()?;
-
-    println!("Indexed {} files.", files.len());
-
-    Ok(())
 }
 
 pub fn semantic_search(query: &str) -> Result<Vec<String>> {

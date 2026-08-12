@@ -106,7 +106,7 @@ mod tests {
     use super::*;
     use std::{
         fs,
-        sync::atomic::Ordering,
+        sync::atomic::{AtomicBool, Ordering},
         thread,
         time::{Duration, Instant},
     };

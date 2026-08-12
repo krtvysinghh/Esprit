@@ -119,3 +119,74 @@ fn large_workspace_indexing_is_bounded() {
 
     let _ = fs::remove_dir_all(root);
 }
+
+#[test]
+fn transactional_rebuild_leaves_no_partial_index_on_build_failure() {
+    use std::fs;
+
+    let root = std::env::temp_dir().join(format!(
+        "esprit-crash-recovery-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+
+    fs::create_dir_all(&root).unwrap();
+
+    let staging = root.join(".tantivy-rebuild-test");
+    fs::create_dir_all(&staging).unwrap();
+
+    fs::write(staging.join("partial-segment"), "incomplete").unwrap();
+
+    let original = root.join("tantivy");
+    fs::create_dir_all(&original).unwrap();
+    fs::write(original.join("meta.json"), "original-index").unwrap();
+
+    let original_contents = fs::read(original.join("meta.json")).unwrap();
+
+    fs::remove_dir_all(&staging).unwrap();
+
+    assert!(original.exists());
+    assert_eq!(
+        fs::read(original.join("meta.json")).unwrap(),
+        original_contents
+    );
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn transactional_rebuild_uses_staging_before_promotion() {
+    use std::fs;
+
+    let root = std::env::temp_dir().join(format!(
+        "esprit-transaction-test-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+
+    fs::create_dir_all(&root).unwrap();
+
+    let staging = root.join(".tantivy-rebuild-staging");
+    let live = root.join("tantivy");
+
+    fs::create_dir_all(&live).unwrap();
+    fs::write(live.join("meta.json"), "known-good").unwrap();
+
+    fs::create_dir_all(&staging).unwrap();
+    fs::write(staging.join("meta.json"), "new-index").unwrap();
+
+    assert_eq!(fs::read(live.join("meta.json")).unwrap(), b"known-good");
+
+    fs::remove_dir_all(&staging).unwrap();
+
+    assert!(live.exists());
+    assert_eq!(fs::read(live.join("meta.json")).unwrap(), b"known-good");
+
+    let _ = fs::remove_dir_all(&root);
+}
