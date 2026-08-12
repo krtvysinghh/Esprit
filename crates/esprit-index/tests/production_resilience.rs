@@ -224,3 +224,44 @@ fn concurrent_database_reads_remain_safe() {
 
     let _ = fs::remove_dir_all(root);
 }
+
+#[test]
+fn empty_search_is_safe() {
+    use esprit_index::ranked_search;
+
+    let result = ranked_search("", 100).unwrap();
+
+    assert!(result.is_empty());
+}
+
+#[test]
+fn excessive_search_limit_is_bounded() {
+    use esprit_index::ranked_search;
+
+    let result = ranked_search("nonexistent", usize::MAX).unwrap();
+
+    assert!(result.len() <= 1000);
+}
+
+#[test]
+fn repeated_search_remains_stable() {
+    use esprit_index::{index, rebuild_search_index_for_workspace, workspace_search};
+
+    let root = temp_workspace("search-stability");
+
+    fs::write(
+        root.join("stable.txt"),
+        "stable searchable resilience token",
+    )
+    .unwrap();
+
+    index(&root).unwrap();
+    rebuild_search_index_for_workspace(&root).unwrap();
+
+    for _ in 0..100 {
+        let result = workspace_search(&root, "stable resilience", 20).unwrap();
+        assert_eq!(result.len(), 1);
+    }
+
+    let _ = fs::remove_dir_all(root);
+}

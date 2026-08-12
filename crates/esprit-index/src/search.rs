@@ -117,7 +117,11 @@ pub fn semantic_search(query: &str) -> Result<Vec<String>> {
     let name = schema.get_field("name")?;
     let content = schema.get_field("content")?;
 
-    let reader = index.reader()?;
+    let reader = index
+        .reader_builder()
+        .reload_policy(tantivy::ReloadPolicy::OnCommitWithDelay)
+        .try_into()?;
+
     let searcher = reader.searcher();
 
     let parser = QueryParser::for_index(&index, vec![name, content]);
@@ -271,13 +275,19 @@ pub fn ranked_search(query: &str, limit: usize) -> Result<Vec<crate::SearchResul
     let name = schema.get_field("name")?;
     let content = schema.get_field("content")?;
 
-    let reader = index.reader()?;
+    let reader = index
+        .reader_builder()
+        .reload_policy(tantivy::ReloadPolicy::OnCommitWithDelay)
+        .try_into()?;
+
     let searcher = reader.searcher();
 
     let parser = QueryParser::for_index(&index, vec![name, content]);
     let parsed = parser.parse_query(query)?;
 
-    let docs = searcher.search(&parsed, &TopDocs::with_limit(limit.min(1000)))?;
+    let safe_limit = limit.clamp(1, 1000);
+
+    let docs = searcher.search(&parsed, &TopDocs::with_limit(safe_limit))?;
     let mut results = Vec::with_capacity(docs.len());
 
     for (score, addr) in docs {
@@ -366,11 +376,17 @@ pub fn search_with_metadata(query: &str, limit: usize) -> Result<Vec<crate::Sear
     let name = schema.get_field("name")?;
     let content = schema.get_field("content")?;
 
-    let reader = index.reader()?;
+    let reader = index
+        .reader_builder()
+        .reload_policy(tantivy::ReloadPolicy::OnCommitWithDelay)
+        .try_into()?;
+
     let searcher = reader.searcher();
     let parser = QueryParser::for_index(&index, vec![name, content]);
     let parsed = parser.parse_query(query)?;
-    let docs = searcher.search(&parsed, &TopDocs::with_limit(limit.min(1000)))?;
+    let safe_limit = limit.clamp(1, 1000);
+
+    let docs = searcher.search(&parsed, &TopDocs::with_limit(safe_limit))?;
 
     let mut results = Vec::with_capacity(docs.len());
 
@@ -659,7 +675,11 @@ pub fn workspace_search(
     let name_field = schema.get_field("name")?;
     let content_field = schema.get_field("content")?;
 
-    let reader = index.reader()?;
+    let reader = index
+        .reader_builder()
+        .reload_policy(tantivy::ReloadPolicy::OnCommitWithDelay)
+        .try_into()?;
+
     let searcher = reader.searcher();
 
     let parser = QueryParser::for_index(&index, vec![name_field, content_field]);
@@ -708,7 +728,11 @@ pub fn search(query: &str) -> Result<Vec<String>> {
     let name = schema.get_field("name")?;
     let content = schema.get_field("content")?;
 
-    let reader = index.reader()?;
+    let reader = index
+        .reader_builder()
+        .reload_policy(tantivy::ReloadPolicy::OnCommitWithDelay)
+        .try_into()?;
+
     let searcher = reader.searcher();
 
     let parser = QueryParser::for_index(&index, vec![name, content]);
