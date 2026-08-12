@@ -22,6 +22,10 @@ impl IndexDatabase {
     pub fn open() -> Result<Self> {
         let conn = Connection::open(database_path()?)?;
 
+        conn.pragma_update(None, "journal_mode", "WAL")?;
+        conn.pragma_update(None, "synchronous", "FULL")?;
+        conn.pragma_update(None, "foreign_keys", "ON")?;
+
         conn.execute_batch(
             "
             CREATE TABLE IF NOT EXISTS files(
@@ -76,6 +80,16 @@ impl IndexDatabase {
         }
 
         Ok(Self { conn })
+    }
+
+    pub fn transaction<F>(&mut self, operation: F) -> Result<()>
+    where
+        F: FnOnce(&rusqlite::Transaction<'_>) -> Result<()>,
+    {
+        let tx = self.conn.transaction()?;
+        operation(&tx)?;
+        tx.commit()?;
+        Ok(())
     }
 
     pub fn insert_file(&self, path: impl AsRef<Path>) -> Result<()> {

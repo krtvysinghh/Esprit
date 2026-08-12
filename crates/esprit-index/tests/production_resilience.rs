@@ -190,3 +190,37 @@ fn transactional_rebuild_uses_staging_before_promotion() {
 
     let _ = fs::remove_dir_all(&root);
 }
+
+#[test]
+fn database_integrity_survives_reopen() {
+    use esprit_index::verify_database_integrity;
+
+    verify_database_integrity().unwrap();
+}
+
+#[test]
+fn concurrent_database_reads_remain_safe() {
+    use esprit_index::{all_files, index};
+    use std::thread;
+
+    let root = temp_workspace("database-concurrency");
+
+    fs::write(root.join("a.txt"), "alpha").unwrap();
+    fs::write(root.join("b.txt"), "beta").unwrap();
+
+    index(&root).unwrap();
+
+    let mut handles = Vec::new();
+
+    for _ in 0..8 {
+        handles.push(thread::spawn(|| {
+            all_files().unwrap();
+        }));
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+
+    let _ = fs::remove_dir_all(root);
+}
