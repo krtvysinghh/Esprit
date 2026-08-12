@@ -36,10 +36,14 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
     let mut files = Vec::new();
     let mut seen = HashSet::new();
 
-    for entry in WalkDir::new(root).into_iter().filter_entry(|entry| {
-        let name = entry.file_name().to_string_lossy();
-        name != ".git" && name != "target"
-    }) {
+    for entry in WalkDir::new(root)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|entry| {
+            let name = entry.file_name().to_string_lossy();
+            name != ".git" && name != "target"
+        })
+    {
         let entry = entry?;
 
         if !entry.file_type().is_file() {

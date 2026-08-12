@@ -525,6 +525,130 @@ pub fn intelligent_search(query: &str, limit: usize) -> Result<Vec<crate::Search
     Ok(results)
 }
 
+pub fn rebuild_search_index_for_workspace(root: impl AsRef<std::path::Path>) -> Result<()> {
+    let root = root.as_ref().canonicalize()?;
+    let dir = index_dir()?.join("workspace");
+
+    std::fs::create_dir_all(&dir)?;
+
+    let workspace_key = {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        root.to_string_lossy().hash(&mut hasher);
+        format!("{:016x}", hasher.finish())
+    };
+
+    let workspace_dir = dir.join(workspace_key);
+
+    if workspace_dir.exists() {
+        std::fs::remove_dir_all(&workspace_dir)?;
+    }
+
+    std::fs::create_dir_all(&workspace_dir)?;
+
+    let (schema, fields) = build();
+    let index = Index::create_in_dir(&workspace_dir, schema)?;
+    let mut writer: tantivy::IndexWriter<TantivyDocument> = index.writer(50_000_000)?;
+
+    for entry in walkdir::WalkDir::new(&root)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+    {
+        let path = entry.path();
+
+        if !entry.file_type().is_file() {
+            continue;
+        }
+
+        if std::fs::File::open(path).is_err() {
+            continue;
+        }
+
+        let content = extract(path);
+
+        let filename = path.file_name().and_then(|v| v.to_str()).unwrap_or("");
+
+        writer.add_document(doc!(
+            fields.path => path.to_string_lossy().to_string(),
+            fields.name => filename.to_string(),
+            fields.content => content,
+        ))?;
+    }
+
+    writer.commit()?;
+
+    Ok(())
+}
+
+pub fn workspace_search(
+    root: impl AsRef<std::path::Path>,
+    query: &str,
+    limit: usize,
+) -> Result<Vec<crate::SearchResult>> {
+    let root = root.as_ref().canonicalize()?;
+
+    if query.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let dir = index_dir()?.join("workspace");
+
+    let workspace_key = {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        root.to_string_lossy().hash(&mut hasher);
+        format!("{:016x}", hasher.finish())
+    };
+
+    let workspace_dir = dir.join(workspace_key);
+    let index = Index::open_in_dir(workspace_dir)?;
+
+    let schema = index.schema();
+    let path_field = schema.get_field("path")?;
+    let name_field = schema.get_field("name")?;
+    let content_field = schema.get_field("content")?;
+
+    let reader = index.reader()?;
+    let searcher = reader.searcher();
+
+    let parser = QueryParser::for_index(&index, vec![name_field, content_field]);
+
+    let parsed = parser.parse_query(query)?;
+
+    let docs = searcher.search(&parsed, &TopDocs::with_limit(limit.clamp(1, 1000)))?;
+
+    let mut results = Vec::with_capacity(docs.len());
+
+    for (score, addr) in docs {
+        let document: TantivyDocument = searcher.doc(addr)?;
+
+        let Some(value) = document.get_first(path_field) else {
+            continue;
+        };
+
+        let Some(path_text) = value.as_str() else {
+            continue;
+        };
+
+        let path = std::path::PathBuf::from(path_text);
+
+        let Ok(canonical_path) = path.canonicalize() else {
+            continue;
+        };
+
+        if canonical_path.starts_with(&root) {
+            results.push(crate::SearchResult {
+                path: canonical_path,
+                score,
+                snippet: None,
+            });
+        }
+    }
+
+    Ok(results)
+}
+
 pub fn search(query: &str) -> Result<Vec<String>> {
     let index = Index::open_in_dir(index_dir()?)?;
 

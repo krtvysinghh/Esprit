@@ -1,0 +1,121 @@
+use esprit_index::{
+    all_files_in_workspace, index, rebuild_search_index_for_workspace, workspace_search,
+};
+use std::{
+    fs,
+    path::PathBuf,
+    time::{Duration, Instant},
+};
+
+fn temp_workspace(name: &str) -> PathBuf {
+    let root =
+        std::env::temp_dir().join(format!("esprit-production-{}-{}", name, std::process::id()));
+
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).unwrap();
+    root
+}
+
+#[test]
+fn workspace_isolation_and_search_are_deterministic() {
+    let root = temp_workspace("isolation");
+    let other = temp_workspace("other");
+
+    fs::write(
+        root.join("semantic.txt"),
+        "Esprit semantic workspace token_unique_alpha",
+    )
+    .unwrap();
+
+    fs::write(
+        other.join("other.txt"),
+        "Esprit semantic workspace token_unique_beta",
+    )
+    .unwrap();
+
+    let indexed_root = index(&root).unwrap();
+    let indexed_other = index(&other).unwrap();
+
+    assert_eq!(indexed_root.len(), 1);
+    assert_eq!(indexed_other.len(), 1);
+
+    rebuild_search_index_for_workspace(&root).unwrap();
+
+    let files = all_files_in_workspace(&root).unwrap();
+
+    if !files.is_empty() {
+        assert!(files.iter().all(|file| file.path.starts_with(&root)));
+    }
+
+    let results = workspace_search(&root, "token_unique_alpha", 20).unwrap();
+    assert_eq!(results.len(), 1);
+
+    let canonical_root = root.canonicalize().unwrap();
+    let canonical_result = results[0].path.canonicalize().unwrap();
+
+    assert!(canonical_result.starts_with(&canonical_root));
+
+    let foreign = workspace_search(&root, "token_unique_beta", 20).unwrap();
+    assert!(foreign.is_empty());
+
+    let _ = fs::remove_dir_all(root);
+    let _ = fs::remove_dir_all(other);
+}
+
+#[test]
+fn rapid_updates_remain_indexable() {
+    let root = temp_workspace("rapid");
+    let path = root.join("rapid.txt");
+
+    for i in 0..250 {
+        fs::write(&path, format!("rapid version {} unique_rapid_token", i)).unwrap();
+
+        index(&root).unwrap();
+    }
+
+    rebuild_search_index_for_workspace(&root).unwrap();
+
+    let results = workspace_search(&root, "unique_rapid_token", 20).unwrap();
+    assert_eq!(results.len(), 1);
+
+    let _ = fs::remove_dir_all(root);
+}
+
+#[test]
+fn large_workspace_indexing_is_bounded() {
+    let root = temp_workspace("large");
+
+    for i in 0..10_000 {
+        let dir = root.join(format!("d{:03}", i / 100));
+        fs::create_dir_all(&dir).unwrap();
+
+        fs::write(
+            dir.join(format!("f{:05}.txt", i)),
+            format!("synthetic document {} scalable searchable content", i),
+        )
+        .unwrap();
+    }
+
+    let start = Instant::now();
+    let files = index(&root).unwrap();
+    let elapsed = start.elapsed();
+
+    assert_eq!(files.len(), 10_000);
+    assert!(elapsed < Duration::from_secs(120));
+
+    rebuild_search_index_for_workspace(&root).unwrap();
+
+    let results = workspace_search(&root, "scalable searchable", 100).unwrap();
+    assert!(!results.is_empty());
+
+    let canonical_root = root.canonicalize().unwrap();
+
+    assert!(results.iter().all(|r| {
+        r.path
+            .canonicalize()
+            .map(|path| path.starts_with(&canonical_root))
+            .unwrap_or(false)
+    }));
+
+    let _ = fs::remove_dir_all(root);
+}

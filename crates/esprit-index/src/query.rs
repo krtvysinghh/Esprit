@@ -128,3 +128,40 @@ pub fn recover_index(root: impl AsRef<std::path::Path>) -> Result<Vec<crate::Ind
 
     Ok(indexed)
 }
+
+pub fn all_files_in_workspace(
+    root: impl AsRef<std::path::Path>,
+) -> Result<Vec<crate::IndexedFile>> {
+    let root = root.as_ref().canonicalize()?;
+    let conn = crate::database::open_database()?;
+
+    let mut stmt = conn.prepare("SELECT path,size,modified FROM files ORDER BY path")?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(crate::IndexedFile {
+            path: std::path::PathBuf::from(row.get::<_, String>(0)?),
+            size: row.get(1)?,
+            modified: row.get(2)?,
+        })
+    })?;
+
+    let mut files = Vec::new();
+
+    for row in rows {
+        let file = row?;
+
+        let Ok(path) = file.path.canonicalize() else {
+            continue;
+        };
+
+        if path.starts_with(&root) {
+            files.push(crate::IndexedFile {
+                path,
+                size: file.size,
+                modified: file.modified,
+            });
+        }
+    }
+
+    Ok(files)
+}
