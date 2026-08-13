@@ -160,9 +160,7 @@ mod tests {
         thread::sleep(Duration::from_millis(300));
         stop.store(true, Ordering::Relaxed);
 
-        let result = handle
-            .join()
-            .map_err(|_| anyhow::anyhow!("daemon worker thread panicked"))?;
+        let result = handle.join().expect("daemon worker thread panicked");
 
         assert!(result.is_ok());
 
@@ -203,9 +201,7 @@ mod tests {
 
         stop.store(true, Ordering::Relaxed);
 
-        let result = handle
-            .join()
-            .map_err(|_| anyhow::anyhow!("daemon worker thread panicked"))?;
+        let result = handle.join().expect("daemon worker thread panicked");
 
         assert!(result.is_ok());
 
