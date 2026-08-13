@@ -23,7 +23,7 @@ pub fn hash(path: &Path) -> Result<String> {
 
     for byte in digest {
         use std::fmt::Write;
-        write!(&mut out, "{:02x}", byte).unwrap();
+        let _ = write!(&mut out, "{:02x}", byte);
     }
 
     Ok(out)

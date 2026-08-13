@@ -26,7 +26,7 @@ impl Ai {
             client: Client::builder()
                 .timeout(std::time::Duration::from_secs(120))
                 .build()
-                .expect("failed to create http client"),
+                .map_err(|error| anyhow::anyhow!("failed to create HTTP client: {error}"))?,
             model: model.into(),
             endpoint: std::env::var("OLLAMA_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string()),
