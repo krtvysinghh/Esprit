@@ -21,7 +21,7 @@ pub struct Ai {
 }
 
 impl Ai {
-    pub fn new(model: impl Into<String>) -> Self {
+    pub fn new(model: impl Into<String>) -> anyhow::Result<Self> {
         Self {
             client: Client::builder()
                 .timeout(std::time::Duration::from_secs(120))
@@ -30,7 +30,7 @@ impl Ai {
             model: model.into(),
             endpoint: std::env::var("OLLAMA_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:11434".to_string()),
-        }
+        })
     }
 
     pub fn health(&self) -> Result<()> {

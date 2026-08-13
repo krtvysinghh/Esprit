@@ -15,7 +15,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             ai_model: "qwen3:1.7b".into(),
-            workspace: std::env::current_dir()?,
+            workspace: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
             threads: std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(4),
