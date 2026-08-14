@@ -33,7 +33,13 @@ async fn ask(Json(req): Json<Ask>) -> Json<Reply> {
         });
     }
 
-    let answer = esprit_rag::ask(prompt).unwrap_or_else(|_| "AI request failed.".to_string());
+    let answer = match esprit_rag::ask(prompt) {
+        Ok(answer) => answer,
+        Err(error) => {
+            tracing::error!(%error, "AI request failed");
+            "AI request failed.".to_string()
+        }
+    };
 
     Json(Reply { answer })
 }
