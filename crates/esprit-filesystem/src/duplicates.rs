@@ -29,7 +29,7 @@ fn hash(path: &Path) -> Result<String> {
 pub fn duplicates(root: impl AsRef<Path>) -> Result<Vec<Vec<PathBuf>>> {
     let mut map: HashMap<String, Vec<PathBuf>> = HashMap::new();
 
-    for entry in WalkDir::new(root) {
+    for entry in WalkDir::new(root).follow_links(false) {
         let entry = entry?;
 
         if !entry.file_type().is_file() {

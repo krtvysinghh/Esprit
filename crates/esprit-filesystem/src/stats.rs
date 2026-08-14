@@ -19,7 +19,7 @@ impl FolderStats {
             extensions: HashMap::new(),
         };
 
-        for entry in WalkDir::new(root) {
+        for entry in WalkDir::new(root).follow_links(false) {
             let entry = entry?;
 
             if entry.file_type().is_dir() {

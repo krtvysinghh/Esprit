@@ -13,3 +13,15 @@ pub fn run(agent: Agent, prompt: &str) -> Result<String> {
         Agent::Search => esprit_rag::ask(&format!("Find everything related to:\n{}", prompt)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn agents_have_all_modes() {
+        let _ = Agent::Chat;
+        let _ = Agent::Code;
+        let _ = Agent::Search;
+    }
+}

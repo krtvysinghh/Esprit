@@ -1,5 +1,5 @@
 use anyhow::Result;
-use esprit_index::{delete_file, insert_file, rename_file, update_file};
+use esprit_index::{sync_search_delete, sync_search_insert, sync_search_rename, IndexDatabase};
 use notify::{
     event::{ModifyKind, RemoveKind, RenameMode},
     recommended_watcher, Event, EventKind, RecursiveMode, Watcher,
@@ -27,6 +27,7 @@ fn ignored(path: &Path) -> bool {
 }
 
 pub fn watch(root: impl AsRef<Path>) -> Result<()> {
+    let database = IndexDatabase::open()?;
     let (tx, rx) = channel();
 
     let mut watcher = recommended_watcher(move |e: notify::Result<Event>| {
@@ -94,22 +95,26 @@ pub fn watch(root: impl AsRef<Path>) -> Result<()> {
             if let Some((ev, _)) = pending.remove(&key) {
                 match ev {
                     Pending::Insert(p) => {
-                        let _ = insert_file(&p);
+                        let _ = database.insert_file(&p);
+                        let _ = sync_search_insert(&p);
                         println!("+ {}", p.display());
                     }
 
                     Pending::Update(p) => {
-                        let _ = update_file(&p);
+                        let _ = database.update_file(&p);
+                        let _ = sync_search_insert(&p);
                         println!("~ {}", p.display());
                     }
 
                     Pending::Delete(p) => {
-                        let _ = delete_file(&p);
+                        let _ = database.delete_file(&p);
+                        let _ = sync_search_delete(&p);
                         println!("- {}", p.display());
                     }
 
                     Pending::Rename(a, b) => {
-                        let _ = rename_file(&a, &b);
+                        let _ = database.rename_file(&a, &b);
+                        let _ = sync_search_rename(&a, &b);
                         println!("R {} -> {}", a.display(), b.display());
                     }
                 }

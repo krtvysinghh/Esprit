@@ -17,3 +17,5 @@ esprit-rag = { version = "0.1.0", path = "../esprit-rag" }
 esprit-agents = { version = "0.1.0", path = "../esprit-agents" }
 esprit-workflows = { version = "0.1.0", path = "../esprit-workflows" }
 esprit-api = { version = "0.1.0", path = "../esprit-api" }
+
+esprit-production = { version = "0.1.0", path = "../esprit-production" }

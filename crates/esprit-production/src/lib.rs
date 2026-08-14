@@ -8,7 +8,9 @@ pub fn init() -> Result<()> {
         .compact()
         .finish();
 
-    let _ = tracing::subscriber::set_global_default(subscriber);
+    if tracing::subscriber::set_global_default(subscriber).is_err() {
+        return Ok(());
+    }
 
     Ok(())
 }

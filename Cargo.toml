@@ -16,21 +16,18 @@ members = [
     "crates/esprit-codeintel",
     "crates/esprit-daemon",
     "crates/esprit-api",
-    "crates/esprit-core-index",
     "crates/esprit-production",
     "desktop",
     "crates/esprit-embeddings",
     "crates/esprit-index",
     "crates/esprit-ai",
     "crates/esprit-platform",
-    "crates/esprit-telemetry",
     "crates/esprit-cache",
     "crates/esprit-storage",
     "crates/esprit-jobs",
     "crates/esprit-pipeline",
     "crates/esprit-utils",
     "crates/esprit-security",
-    "crates/esprit-package", "crates/esprit-app",
 ]
 
 default-members = [

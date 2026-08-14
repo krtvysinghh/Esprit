@@ -4,7 +4,8 @@ use rusqlite::{params, Connection};
 use std::fs;
 
 fn db() -> Result<Connection> {
-    let dirs = ProjectDirs::from("dev", "esprit", "esprit").unwrap();
+    let dirs = ProjectDirs::from("dev", "esprit", "esprit")
+        .ok_or_else(|| anyhow::anyhow!("unable to determine platform project directories"))?;
     fs::create_dir_all(dirs.data_dir())?;
     let conn = Connection::open(dirs.data_dir().join("memory.db"))?;
 
