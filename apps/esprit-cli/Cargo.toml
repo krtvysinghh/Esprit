@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
-clap.workspace = true
+clap = { workspace = true, features = ["derive"] }
 
 esprit-core = { version = "0.1.0", path = "../../crates/esprit-core" }
 esprit-config = { version = "0.1.0", path = "../../crates/esprit-config" }
@@ -32,3 +32,5 @@ esprit-rag = { version = "0.1.0", path = "../../crates/esprit-rag" }
 esprit-agents = { version = "0.1.0", path = "../../crates/esprit-agents" }
 
 esprit-workflows = { version = "0.1.0", path = "../../crates/esprit-workflows" }
+rusqlite = { workspace = true, features = ["bundled"] }
+tantivy.workspace = true
