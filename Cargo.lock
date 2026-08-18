@@ -1195,6 +1195,7 @@ dependencies = [
  "esprit-rag",
  "esprit-search",
  "esprit-workflows",
+ "rusqlite",
 ]
 
 [[package]]

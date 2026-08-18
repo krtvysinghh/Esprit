@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
+use std::path::Path;
 mod health;
 mod storage;
+mod db;
 
 #[derive(Parser)]
 #[command(name = "esprit", version, about = "Local AI Knowledge Engine", long_about = None)]
@@ -13,6 +15,8 @@ struct Cli {
 enum Commands {
     /// Verify local dependencies and environment readiness
     Doctor,
+    /// Initialize the database and index structures
+    Init,
 }
 
 fn main() {
@@ -27,6 +31,18 @@ fn main() {
             println!("Ollama Daemon (127.0.0.1:11434) : {}", ollama);
             println!("Tantivy Index Directory         : {}", tantivy);
             println!("SQLite Vector Store             : {}", sqlite);
+        }
+        Commands::Init => {
+            println!("🚀 Initializing Esprit workspace...");
+            if storage::check_sqlite_store() {
+                let db_path = Path::new(".esprit/db/esprit.db");
+                match db::init_db(db_path) {
+                    Ok(_) => println!("✅ SQLite database initialized with vector schema at {:?}", db_path),
+                    Err(e) => println!("❌ Database initialization failed: {}", e),
+                }
+            } else {
+                println!("❌ Failed to create storage directories.");
+            }
         }
     }
 }
