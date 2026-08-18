@@ -19,12 +19,9 @@ pub fn remember(key: impl Into<String>, value: impl Into<String>) -> anyhow::Res
         fs::create_dir_all(parent)?;
     }
 
-    let mut memories = recall(1000)?;
+    let mut memories: Vec<(String, String)> = recall(1000)?;
 
-    memories.push(Memory {
-        key: key.into(),
-        value: value.into(),
-    });
+    memories.push((key.into(), value.into()));
 
     fs::write(path, serde_json::to_string_pretty(&memories)?)?;
 
@@ -40,13 +37,9 @@ pub fn recall(limit: usize) -> anyhow::Result<Vec<(String, String)>> {
 
     let data = fs::read_to_string(path)?;
 
-    let memories: Vec<Memory> = serde_json::from_str(&data)?;
+    let memories: Vec<(String, String)> = serde_json::from_str(&data)?;
 
-    Ok(memories
-        .into_iter()
-        .take(limit)
-        .map(|m| (m.key, m.value))
-        .collect())
+    Ok(memories.into_iter().take(limit).collect())
 }
 
 pub fn save(memory: Memory) -> anyhow::Result<()> {
