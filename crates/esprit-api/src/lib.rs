@@ -55,7 +55,7 @@ pub fn router() -> Router {
 
 pub async fn stream_answer(
     Json(req): Json<Ask>,
-) -> Sse<impl Iterator<Item = Result<Event, std::convert::Infallible>>> {
+) -> Sse<impl futures_core::Stream<Item = Result<Event, Infallible>>> {
     let answer = match esprit_rag::ask(req.prompt.trim()) {
         Ok(answer) => answer,
         Err(_) => "AI request failed.".to_string(),
@@ -63,5 +63,5 @@ pub async fn stream_answer(
 
     let events = vec![Ok(Event::default().data(answer))];
 
-    Sse::new(events.into_iter())
+    Sse::new(iter(events))
 }
