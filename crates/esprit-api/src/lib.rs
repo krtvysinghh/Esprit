@@ -1,4 +1,5 @@
 use axum::{
+    response::sse::{Event, Sse},
     routing::{get, post},
     Json, Router,
 };
@@ -48,4 +49,20 @@ pub fn router() -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/ask", post(ask))
+        .route("/ask/stream", post(stream_answer))
+}
+
+pub async fn stream_answer(
+    Json(req): Json<Ask>,
+) -> Sse<impl futures_util::Stream<Item = Result<Event, std::convert::Infallible>>> {
+    use futures_util::stream;
+
+    let answer = match esprit_rag::ask(req.prompt.trim()) {
+        Ok(v) => v,
+        Err(_) => "AI request failed.".to_string(),
+    };
+
+    let events = vec![Ok(Event::default().data(answer))];
+
+    Sse::new(stream::iter(events))
 }

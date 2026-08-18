@@ -1,16 +1,21 @@
-use anyhow::Result;
-
+#[derive(Debug)]
 pub enum Agent {
-    Chat,
-    Code,
     Search,
+    Planner,
 }
 
-pub fn run(agent: Agent, prompt: &str) -> Result<String> {
-    match agent {
-        Agent::Chat => esprit_rag::ask(prompt),
-        Agent::Code => esprit_rag::ask(&format!("You are an expert Rust engineer.\n\n{}", prompt)),
-        Agent::Search => esprit_rag::ask(&format!("Find everything related to:\n{}", prompt)),
+pub struct Plan {
+    pub steps: Vec<String>,
+}
+
+pub fn create_plan(task: &str) -> Plan {
+    Plan {
+        steps: vec![
+            format!("Analyze task: {}", task),
+            "Search relevant context".to_string(),
+            "Execute workflow".to_string(),
+            "Return result".to_string(),
+        ],
     }
 }
 
@@ -19,9 +24,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn agents_have_all_modes() {
-        let _ = Agent::Chat;
-        let _ = Agent::Code;
-        let _ = Agent::Search;
+    fn planner_creates_steps() {
+        assert!(!create_plan("test").steps.is_empty());
     }
 }

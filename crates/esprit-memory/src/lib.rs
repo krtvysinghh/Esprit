@@ -1,47 +1,40 @@
-use anyhow::Result;
-use directories::ProjectDirs;
-use rusqlite::{params, Connection};
+use serde::{Deserialize, Serialize};
 use std::fs;
+use std::path::PathBuf;
 
-fn db() -> Result<Connection> {
-    let dirs = ProjectDirs::from("dev", "esprit", "esprit")
-        .ok_or_else(|| anyhow::anyhow!("unable to determine platform project directories"))?;
-    fs::create_dir_all(dirs.data_dir())?;
-    let conn = Connection::open(dirs.data_dir().join("memory.db"))?;
-
-    conn.execute_batch(
-        r#"
-    CREATE TABLE IF NOT EXISTS memory(
-        id INTEGER PRIMARY KEY,
-        question TEXT,
-        answer TEXT,
-        created_at INTEGER DEFAULT(unixepoch())
-    );
-    "#,
-    )?;
-
-    Ok(conn)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Memory {
+    pub key: String,
+    pub value: String,
 }
 
-pub fn remember(question: &str, answer: &str) -> Result<()> {
-    db()?.execute(
-        "INSERT INTO memory(question,answer) VALUES(?1,?2)",
-        params![question, answer],
-    )?;
+fn memory_file() -> PathBuf {
+    dirs::data_local_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("esprit")
+        .join("memory.json")
+}
+
+pub fn save(memory: Memory) -> anyhow::Result<()> {
+    let path = memory_file();
+
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    let data = serde_json::to_string_pretty(&memory)?;
+    fs::write(path, data)?;
+
     Ok(())
 }
 
-pub fn recall(limit: usize) -> Result<Vec<(String, String)>> {
-    let conn = db()?;
+pub fn load() -> anyhow::Result<Option<Memory>> {
+    let path = memory_file();
 
-    let mut stmt = conn.prepare(
-        "SELECT question,answer
-         FROM memory
-         ORDER BY id DESC
-         LIMIT ?1",
-    )?;
+    if !path.exists() {
+        return Ok(None);
+    }
 
-    let rows = stmt.query_map([limit as i64], |r| Ok((r.get(0)?, r.get(1)?)))?;
-
-    Ok(rows.filter_map(Result::ok).collect())
+    let data = fs::read_to_string(path)?;
+    Ok(Some(serde_json::from_str(&data)?))
 }
