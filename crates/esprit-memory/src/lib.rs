@@ -9,10 +9,7 @@ pub struct Memory {
 }
 
 fn memory_file() -> PathBuf {
-    dirs::data_local_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("esprit")
-        .join("memory.json")
+    PathBuf::from(".esprit").join("memory.json")
 }
 
 pub fn save(memory: Memory) -> anyhow::Result<()> {
