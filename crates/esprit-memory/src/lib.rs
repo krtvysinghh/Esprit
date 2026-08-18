@@ -12,20 +12,24 @@ fn memory_file() -> PathBuf {
     PathBuf::from(".esprit").join("memory.json")
 }
 
-pub fn save(memory: Memory) -> anyhow::Result<()> {
+pub fn remember(key: impl Into<String>, value: impl Into<String>) -> anyhow::Result<()> {
     let path = memory_file();
 
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
 
-    let data = serde_json::to_string_pretty(&memory)?;
-    fs::write(path, data)?;
+    let memory = Memory {
+        key: key.into(),
+        value: value.into(),
+    };
+
+    fs::write(path, serde_json::to_string_pretty(&memory)?)?;
 
     Ok(())
 }
 
-pub fn load() -> anyhow::Result<Option<Memory>> {
+pub fn recall() -> anyhow::Result<Option<Memory>> {
     let path = memory_file();
 
     if !path.exists() {
@@ -34,4 +38,12 @@ pub fn load() -> anyhow::Result<Option<Memory>> {
 
     let data = fs::read_to_string(path)?;
     Ok(Some(serde_json::from_str(&data)?))
+}
+
+pub fn save(memory: Memory) -> anyhow::Result<()> {
+    remember(memory.key, memory.value)
+}
+
+pub fn load() -> anyhow::Result<Option<Memory>> {
+    recall()
 }
