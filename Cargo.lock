@@ -1196,6 +1196,7 @@ dependencies = [
  "esprit-search",
  "esprit-workflows",
  "rusqlite",
+ "tantivy",
 ]
 
 [[package]]

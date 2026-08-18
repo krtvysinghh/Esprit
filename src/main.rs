@@ -3,6 +3,7 @@ use std::path::Path;
 mod health;
 mod storage;
 mod db;
+mod index;
 
 #[derive(Parser)]
 #[command(name = "esprit", version, about = "Local AI Knowledge Engine", long_about = None)]
@@ -37,11 +38,21 @@ fn main() {
             if storage::check_sqlite_store() {
                 let db_path = Path::new(".esprit/db/esprit.db");
                 match db::init_db(db_path) {
-                    Ok(_) => println!("✅ SQLite database initialized with vector schema at {:?}", db_path),
+                    Ok(_) => println!("✅ SQLite database initialized at {:?}", db_path),
                     Err(e) => println!("❌ Database initialization failed: {}", e),
                 }
             } else {
-                println!("❌ Failed to create storage directories.");
+                println!("❌ Failed to create db directory.");
+            }
+            
+            if storage::check_tantivy_dir() {
+                let index_path = Path::new(".esprit/index");
+                match index::init_index(index_path) {
+                    Ok(_) => println!("✅ Tantivy index initialized at {:?}", index_path),
+                    Err(e) => println!("❌ Tantivy initialization failed: {}", e),
+                }
+            } else {
+                println!("❌ Failed to create index directory.");
             }
         }
     }
