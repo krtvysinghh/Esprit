@@ -14,3 +14,7 @@ anyhow.workspace=true
 notify.workspace=true
 crossbeam-channel="0.5"
 esprit-index={version = "0.1.0", path = "../esprit-index" }
+
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tokio-util = "0.7"
+chrono = "0.4"
