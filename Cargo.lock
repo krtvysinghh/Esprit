@@ -1243,7 +1243,9 @@ dependencies = [
  "crossbeam-channel",
  "esprit-index",
  "notify",
+ "tokio",
  "tokio-util",
+ "tracing",
  "tracing-subscriber",
 ]
 
