@@ -105,6 +105,24 @@ enum Commands {
     Deps,
 
     /// Find source files missing test files
+    /// Generate a natural language commit summary from git diff
+    Diff,
+
+    /// Offline Code Reviewer for staged changes
+    Review,
+
+    /// Generate missing docstrings for a file
+    Annotate { file: String },
+
+    /// Generate a step-by-step refactoring plan
+    Plan { goal: String },
+
+    /// Triage which tests to run based on recent changes
+    Triage,
+
+    /// Export the entire indexed project to a single Markdown onboarding guide
+    Export,
+
     TestGaps,
 
     /// Print Esprit version and build info.
@@ -776,6 +794,79 @@ fn main() -> Result<()> {
             }
             println!();
         }
+        Commands::Diff => {
+            let sp = spinner("Analyzing git diff…");
+            let diff = esprit_platform::doctor::capture("git", &["diff", "HEAD"]).unwrap_or_default();
+            let ai = esprit_ai::Ai::default_model().expect("model load");
+            sp.finish_and_clear();
+            if diff.trim().is_empty() {
+                println!("  No changes found in git diff.");
+            } else {
+                let prompt = format!("Summarize this git diff into a concise commit message:\n\n{diff}");
+                println!("\n  {}\n", "─".repeat(52).dimmed());
+                let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
+                println!("\n\n  {}\n", "─".repeat(52).dimmed());
+            }
+        }
+        Commands::Review => {
+            let sp = spinner("Reviewing staged changes…");
+            let diff = esprit_platform::doctor::capture("git", &["diff", "--cached"]).unwrap_or_default();
+            let ai = esprit_ai::Ai::default_model().expect("model load");
+            sp.finish_and_clear();
+            if diff.trim().is_empty() {
+                println!("  No staged changes to review.");
+            } else {
+                let prompt = format!("Perform a strict code review on these changes. Focus on security, performance, and best practices:\n\n{diff}");
+                println!("\n  {}\n", "─".repeat(52).dimmed());
+                let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
+                println!("\n\n  {}\n", "─".repeat(52).dimmed());
+            }
+        }
+        Commands::Annotate { file } => {
+            let sp = spinner(&format!("Annotating {file}…"));
+            if let Ok(content) = std::fs::read_to_string(&file) {
+                let ai = esprit_ai::Ai::default_model().expect("model load");
+                sp.finish_and_clear();
+                let prompt = format!("Add missing docstrings and inline comments to this code. Output ONLY the updated code:\n\n{content}");
+                println!("\n  {}\n", "─".repeat(52).dimmed());
+                let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
+                println!("\n\n  {}\n", "─".repeat(52).dimmed());
+            } else {
+                sp.finish_and_clear();
+                fail("Could not read file");
+            }
+        }
+        Commands::Plan { goal } => {
+            let sp = spinner("Formulating refactoring plan…");
+            let ai = esprit_ai::Ai::default_model().expect("model load");
+            sp.finish_and_clear();
+            let prompt = format!("Create a step-by-step structural refactoring plan to achieve this goal:\n\n{goal}");
+            println!("\n  {}\n", "─".repeat(52).dimmed());
+            let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
+            println!("\n\n  {}\n", "─".repeat(52).dimmed());
+        }
+        Commands::Triage => {
+            let sp = spinner("Triaging impact…");
+            let diff = esprit_platform::doctor::capture("git", &["diff", "--name-only", "HEAD"]).unwrap_or_default();
+            let ai = esprit_ai::Ai::default_model().expect("model load");
+            sp.finish_and_clear();
+            let prompt = format!("Based on these modified files, list the specific test files or testing areas that MUST be run to ensure no regressions:\n\n{diff}");
+            println!("\n  {}\n", "─".repeat(52).dimmed());
+            let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
+            println!("\n\n  {}\n", "─".repeat(52).dimmed());
+        }
+        Commands::Export => {
+            let sp = spinner("Compiling Project Intelligence…");
+            let files = esprit_index::all_files()?;
+            let mut md = String::from("# Project Onboarding Guide\n\n## Indexed Files\n\n");
+            for f in &files {
+                md.push_str(&format!("- {}\n", f.path.display()));
+            }
+            std::fs::write("esprit_onboarding.md", md)?;
+            sp.finish_and_clear();
+            ok("Exported project intelligence to esprit_onboarding.md");
+        }
+
         Commands::TestGaps => {
             section("Test Gap Finder");
             divider();

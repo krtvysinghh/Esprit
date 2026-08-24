@@ -74,6 +74,12 @@ pub fn insert_file(path: impl AsRef<Path>) -> Result<()> {
         return Ok(());
     }
     let meta = path.metadata()?;
+    if let Ok(content) = fs::read_to_string(path) {
+        if content.contains("AKIA") || content.contains("BEGIN RSA PRIVATE KEY") || content.contains("eyJhbGciOi") {
+            println!("\n\033[31m[WARNING] Possible secret/key found in: {}\033[0m\n", path.display());
+        }
+    }
+
     let mtime = meta
         .modified()
         .ok()
@@ -109,6 +115,7 @@ pub fn delete_file(path: impl AsRef<Path>) -> Result<()> {
 pub fn rename_file(old: impl AsRef<Path>, new: impl AsRef<Path>) -> Result<()> {
     let new = new.as_ref();
     let meta = new.metadata()?;
+
     let mtime = meta
         .modified()
         .ok()
