@@ -210,9 +210,7 @@ enum ModelAction {
         id: String,
     },
     /// Remove an installed model to free disk space.
-    Remove {
-        id: String,
-    },
+    Remove { id: String },
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -250,17 +248,32 @@ fn main() -> Result<()> {
             section("AI & Inference Engine");
             divider();
             #[cfg(target_os = "macos")]
-            kv("Inference Backend", "Embedded llama.cpp (Apple Silicon Metal)");
+            kv(
+                "Inference Backend",
+                "Embedded llama.cpp (Apple Silicon Metal)",
+            );
             #[cfg(not(target_os = "macos"))]
-            kv("Inference Backend", "Embedded llama.cpp (Multi-threaded CPU)");
+            kv(
+                "Inference Backend",
+                "Embedded llama.cpp (Multi-threaded CPU)",
+            );
 
             if let Ok(models) = esprit_models::list_status() {
                 let installed: Vec<_> = models.into_iter().filter(|(_, inst)| *inst).collect();
                 if installed.is_empty() {
-                    println!("  {} No models installed yet — run: {}", "⚠".yellow().bold(), "esprit init".bold().cyan());
+                    println!(
+                        "  {} No models installed yet — run: {}",
+                        "⚠".yellow().bold(),
+                        "esprit init".bold().cyan()
+                    );
                 } else {
                     for (entry, _) in installed {
-                        println!("  {} {:<14} {}", "✓".green().bold(), entry.id.bold(), entry.display.dimmed());
+                        println!(
+                            "  {} {:<14} {}",
+                            "✓".green().bold(),
+                            entry.id.bold(),
+                            entry.display.dimmed()
+                        );
                     }
                 }
             }
@@ -270,12 +283,22 @@ fn main() -> Result<()> {
             let chk = |ok: bool, name: &str, ver: Option<&str>| {
                 if ok {
                     if let Some(v) = ver {
-                        println!("  {} {:<10} {}", "✓".green().bold(), name.bold(), v.dimmed());
+                        println!(
+                            "  {} {:<10} {}",
+                            "✓".green().bold(),
+                            name.bold(),
+                            v.dimmed()
+                        );
                     } else {
                         println!("  {} {}", "✓".green().bold(), name.bold());
                     }
                 } else {
-                    println!("  {} {:<10} {}", "○".dimmed(), name.dimmed(), "optional (not found)".dimmed());
+                    println!(
+                        "  {} {:<10} {}",
+                        "○".dimmed(),
+                        name.dimmed(),
+                        "optional (not found)".dimmed()
+                    );
                 }
             };
             chk(report.git, "Git", report.git_version.as_deref());
@@ -316,11 +339,11 @@ fn main() -> Result<()> {
             kv("Ollama URL", &cfg.ollama_url);
             kv("Workspace", &cfg.workspace.display().to_string());
             kv("Threads", &cfg.threads.to_string());
+            kv("Color", if cfg.color { "enabled" } else { "disabled" });
             kv(
-                "Color",
-                if cfg.color { "enabled" } else { "disabled" },
+                "Context chars/file",
+                &cfg.context_chars_per_file.to_string(),
             );
-            kv("Context chars/file", &cfg.context_chars_per_file.to_string());
             kv("Max context files", &cfg.max_context_files.to_string());
             println!();
         }
@@ -413,18 +436,30 @@ fn main() -> Result<()> {
                 ok("Nothing to organise.");
             } else {
                 let label = if dry_run { "Would move" } else { "Moved" };
-                println!("\n  {} {} file{}\n", "●".cyan(), ops.len(), if ops.len() == 1 { "" } else { "s" });
+                println!(
+                    "\n  {} {} file{}\n",
+                    "●".cyan(),
+                    ops.len(),
+                    if ops.len() == 1 { "" } else { "s" }
+                );
                 for op in &ops {
                     println!(
                         "  {} {} {} {}",
                         "→".dimmed(),
-                        op.from.file_name().unwrap_or_default().to_string_lossy().bold(),
+                        op.from
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .bold(),
                         "→".dimmed(),
                         op.to.display().to_string().cyan()
                     );
                 }
                 if dry_run {
-                    println!("\n  {} Dry run — no files were moved. Remove --dry-run to apply.\n", "⚠".yellow());
+                    println!(
+                        "\n  {} Dry run — no files were moved. Remove --dry-run to apply.\n",
+                        "⚠".yellow()
+                    );
                 } else {
                     println!("\n  {} {label} {} files.\n", "✓".green(), ops.len());
                 }
@@ -587,12 +622,10 @@ fn main() -> Result<()> {
         Commands::Agent { agent, prompt } => {
             use esprit_agents::Agent;
             let ag = match agent.as_str() {
-                "chat"   => Agent::Chat,
-                "code"   => Agent::Code,
+                "chat" => Agent::Chat,
+                "code" => Agent::Code,
                 "search" => Agent::Search,
-                other => anyhow::bail!(
-                    "unknown agent \"{other}\" — choose: chat | code | search"
-                ),
+                other => anyhow::bail!("unknown agent \"{other}\" — choose: chat | code | search"),
             };
 
             let sp = spinner(&format!("Running {} agent…", agent.bold()));
@@ -618,8 +651,8 @@ fn main() -> Result<()> {
             let t = Instant::now();
             let out = match workflow.as_str() {
                 "explain" => esprit_workflows::explain(&prompt),
-                "review"  => esprit_workflows::code_review(&prompt),
-                "search"  => esprit_workflows::project_search(&prompt),
+                "review" => esprit_workflows::code_review(&prompt),
+                "search" => esprit_workflows::project_search(&prompt),
                 other => anyhow::bail!(
                     "unknown workflow \"{other}\" — choose: explain | review | search"
                 ),
@@ -727,8 +760,9 @@ fn main() -> Result<()> {
             }
 
             ModelAction::Pull { id } => {
-                let entry = esprit_models::lookup(&id)
-                    .ok_or_else(|| anyhow::anyhow!("Unknown model \"{id}\" — run `esprit model list`"))?;
+                let entry = esprit_models::lookup(&id).ok_or_else(|| {
+                    anyhow::anyhow!("Unknown model \"{id}\" — run `esprit model list`")
+                })?;
                 println!(
                     "\n  {} Downloading {}…\n",
                     "⬇".cyan().bold(),

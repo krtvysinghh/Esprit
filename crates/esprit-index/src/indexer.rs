@@ -64,15 +64,16 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
 
         // Incremental: skip if mtime is unchanged
         let existing_mtime: Option<i64> = conn
-            .query_row(
-                "SELECT mtime FROM files WHERE path=?1",
-                [&path_str],
-                |r| r.get(0),
-            )
+            .query_row("SELECT mtime FROM files WHERE path=?1", [&path_str], |r| {
+                r.get(0)
+            })
             .ok();
 
         if existing_mtime == Some(mtime) {
-            files.push(IndexedFile { path: path.to_path_buf(), size: meta.len() });
+            files.push(IndexedFile {
+                path: path.to_path_buf(),
+                size: meta.len(),
+            });
             continue;
         }
 
@@ -81,7 +82,10 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
             params![path_str, meta.len(), mtime, lang],
         )?;
 
-        files.push(IndexedFile { path: path.to_path_buf(), size: meta.len() });
+        files.push(IndexedFile {
+            path: path.to_path_buf(),
+            size: meta.len(),
+        });
     }
 
     Ok(files)

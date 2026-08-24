@@ -119,7 +119,11 @@ pub fn watch(root: impl AsRef<Path>) -> Result<()> {
 
                     Pending::Rename(a, b) => {
                         if let Err(e) = rename_file(&a, &b) {
-                            tracing::warn!("index rename failed {} → {}: {e}", a.display(), b.display());
+                            tracing::warn!(
+                                "index rename failed {} → {}: {e}",
+                                a.display(),
+                                b.display()
+                            );
                         } else {
                             println!("R {} → {}", a.display(), b.display());
                         }

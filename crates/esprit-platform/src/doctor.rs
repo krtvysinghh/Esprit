@@ -59,8 +59,8 @@ pub fn doctor() -> DoctorReport {
         .and_then(|s| s.split_whitespace().nth(1).map(String::from));
 
     let git = exists("git");
-    let git_version = capture("git", &["--version"])
-        .and_then(|s| s.split_whitespace().nth(2).map(String::from));
+    let git_version =
+        capture("git", &["--version"]).and_then(|s| s.split_whitespace().nth(2).map(String::from));
 
     let ollama = exists("ollama");
     let ollama_version = capture("ollama", &["--version"])
@@ -90,8 +90,7 @@ pub fn doctor() -> DoctorReport {
 /// Check if Ollama HTTP API is reachable (separate from binary detection).
 #[allow(dead_code)]
 pub fn ollama_reachable() -> Result<bool> {
-    let url = std::env::var("OLLAMA_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:11434".into());
+    let url = std::env::var("OLLAMA_URL").unwrap_or_else(|_| "http://127.0.0.1:11434".into());
     Ok(reqwest::blocking::get(format!("{url}/api/tags"))
         .map(|r| r.status().is_success())
         .unwrap_or(false))

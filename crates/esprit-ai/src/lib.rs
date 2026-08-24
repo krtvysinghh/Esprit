@@ -50,7 +50,10 @@ impl Ai {
         let params = LlamaModelParams::default();
         let model = LlamaModel::load_from_file(bk, path.as_ref(), &params)
             .map_err(|e| anyhow!("Failed to load model from {}: {e}", path.as_ref().display()))?;
-        Ok(Self { model, max_tokens: 1024 })
+        Ok(Self {
+            model,
+            max_tokens: 1024,
+        })
     }
 
     /// Load the model identified by `ESPRIT_MODEL` env var, or the default.
@@ -76,9 +79,7 @@ impl Ai {
 
         // ── 1. Context ────────────────────────────────────────────────────────
         let ctx_params = LlamaContextParams::default()
-            .with_n_ctx(Some(
-                NonZeroU32::new(8192).expect("n_ctx must be non-zero"),
-            ))
+            .with_n_ctx(Some(NonZeroU32::new(8192).expect("n_ctx must be non-zero")))
             .with_n_batch(512);
 
         let mut ctx = self

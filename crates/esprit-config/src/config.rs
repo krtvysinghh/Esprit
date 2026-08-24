@@ -24,8 +24,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            ai_model: std::env::var("ESPRIT_MODEL")
-                .unwrap_or_else(|_| "qwen3:1.7b".into()),
+            ai_model: std::env::var("ESPRIT_MODEL").unwrap_or_else(|_| "qwen3:1.7b".into()),
             ollama_url: std::env::var("OLLAMA_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:11434".into()),
             workspace: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),

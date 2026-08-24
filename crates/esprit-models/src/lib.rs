@@ -3,12 +3,7 @@ use directories::ProjectDirs;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
-use std::{
-    fs,
-    io::Write,
-    path::PathBuf,
-    time::Duration,
-};
+use std::{fs, io::Write, path::PathBuf, time::Duration};
 
 // ── Known models ─────────────────────────────────────────────────────────────
 

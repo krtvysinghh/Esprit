@@ -65,9 +65,7 @@ pub fn cosine(a: &[f32], b: &[f32]) -> f32 {
 pub fn nearest(query: &[f32], k: usize) -> Result<Vec<(String, f32)>> {
     let c = db()?;
     let mut stmt = c.prepare("SELECT key, embedding FROM vectors")?;
-    let rows = stmt.query_map([], |r| {
-        Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
-    })?;
+    let rows = stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))?;
 
     let mut scores: Vec<(String, f32)> = rows
         .filter_map(|r| r.ok())

@@ -40,7 +40,10 @@ fn organize_with_options(root: impl AsRef<Path>, dry_run: bool) -> Result<Vec<Mo
             .and_then(|e| e.to_str())
             .unwrap_or("misc")
             .to_lowercase();
-        by_ext.entry(ext).or_default().push(entry.path().to_path_buf());
+        by_ext
+            .entry(ext)
+            .or_default()
+            .push(entry.path().to_path_buf());
     }
 
     let mut ops = Vec::new();
@@ -55,7 +58,10 @@ fn organize_with_options(root: impl AsRef<Path>, dry_run: bool) -> Result<Vec<Mo
             if file == dest {
                 continue;
             }
-            ops.push(MoveOp { from: file.clone(), to: dest.clone() });
+            ops.push(MoveOp {
+                from: file.clone(),
+                to: dest.clone(),
+            });
             if !dry_run {
                 fs::rename(&file, &dest)?;
             }
