@@ -16,4 +16,6 @@ esprit-ai = { version = "0.1.0", path = "../esprit-ai" }
 
 esprit-embeddings = { version = "0.1.0", path = "../esprit-embeddings" }
 
-esprit-memory = { version = "0.1.0", path = "../esprit-memory" }
+esprit-memory  = { version = "0.1.0", path = "../esprit-memory" }
+esprit-vectors = { version = "0.1.0", path = "../esprit-vectors" }
+esprit-utils   = { version = "0.1.0", path = "../esprit-utils" }

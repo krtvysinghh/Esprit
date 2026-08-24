@@ -94,23 +94,35 @@ pub fn watch(root: impl AsRef<Path>) -> Result<()> {
             if let Some((ev, _)) = pending.remove(&key) {
                 match ev {
                     Pending::Insert(p) => {
-                        let _ = insert_file(&p);
-                        println!("+ {}", p.display());
+                        if let Err(e) = insert_file(&p) {
+                            tracing::warn!("index insert failed for {}: {e}", p.display());
+                        } else {
+                            println!("+ {}", p.display());
+                        }
                     }
 
                     Pending::Update(p) => {
-                        let _ = update_file(&p);
-                        println!("~ {}", p.display());
+                        if let Err(e) = update_file(&p) {
+                            tracing::warn!("index update failed for {}: {e}", p.display());
+                        } else {
+                            println!("~ {}", p.display());
+                        }
                     }
 
                     Pending::Delete(p) => {
-                        let _ = delete_file(&p);
-                        println!("- {}", p.display());
+                        if let Err(e) = delete_file(&p) {
+                            tracing::warn!("index delete failed for {}: {e}", p.display());
+                        } else {
+                            println!("- {}", p.display());
+                        }
                     }
 
                     Pending::Rename(a, b) => {
-                        let _ = rename_file(&a, &b);
-                        println!("R {} -> {}", a.display(), b.display());
+                        if let Err(e) = rename_file(&a, &b) {
+                            tracing::warn!("index rename failed {} → {}: {e}", a.display(), b.display());
+                        } else {
+                            println!("R {} → {}", a.display(), b.display());
+                        }
                     }
                 }
             }

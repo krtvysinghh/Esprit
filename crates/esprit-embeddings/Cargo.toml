@@ -1,16 +1,17 @@
 [package]
-name = "esprit-embeddings"
+name    = "esprit-embeddings"
 version.workspace = true
 edition.workspace = true
-description = "Esprit AI workspace component"
+description = "Esprit local embeddings via llama.cpp (no Ollama required)"
 license = "MIT"
 repository = "https://github.com/krtvysinghh/Esprit"
-homepage = "https://github.com/krtvysinghh/Esprit"
-documentation = "https://github.com/krtvysinghh/Esprit"
-readme = "README.md"
 
 [dependencies]
-anyhow.workspace = true
-reqwest = { version = "0.12", features = ["blocking","json"] }
-serde.workspace = true
-serde_json.workspace = true
+anyhow.workspace  = true
+esprit-models     = { version = "0.1.0", path = "../esprit-models" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+llama-cpp-2 = { version = "0.1", features = ["metal"] }
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+llama-cpp-2 = { version = "0.1" }
