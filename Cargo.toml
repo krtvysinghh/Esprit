@@ -31,11 +31,19 @@ members = [
     "crates/esprit-utils",
     "crates/esprit-security",
     "crates/esprit-package", "crates/esprit-app",
+    "crates/esprit-models",
 ]
 
 default-members = [
-    "apps/esprit-cli"
+    "apps/esprit-cli",
 ]
+
+[profile.release]
+opt-level     = 3
+lto           = "thin"
+codegen-units = 1
+strip         = "symbols"
+panic         = "abort"
 
 [workspace.package]
 version = "0.1.0"

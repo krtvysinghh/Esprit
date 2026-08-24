@@ -10,8 +10,9 @@ documentation = "https://github.com/krtvysinghh/Esprit"
 readme = "README.md"
 
 [dependencies]
-anyhow.workspace = true
-walkdir.workspace = true
+anyhow.workspace      = true
+ignore.workspace      = true
 directories.workspace = true
-rusqlite.workspace = true
-tantivy.workspace = true
+rusqlite.workspace    = true
+tantivy.workspace     = true
+tracing.workspace     = true
