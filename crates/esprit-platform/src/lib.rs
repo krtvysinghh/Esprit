@@ -1,4 +1,4 @@
-mod doctor;
+pub mod doctor;
 mod watch;
 
 pub use doctor::{doctor, DoctorReport};

@@ -20,9 +20,12 @@ fn db() -> Result<Connection> {
              session   TEXT    NOT NULL DEFAULT 'default',
              question  TEXT    NOT NULL,
              answer    TEXT    NOT NULL,
+             parent_id INTEGER,
              created_at INTEGER NOT NULL DEFAULT(unixepoch())
          );",
     )?;
+    // Ignore error if column already exists
+    let _ = conn.execute("ALTER TABLE memory ADD COLUMN parent_id INTEGER", []);
     Ok(conn)
 }
 
@@ -75,4 +78,41 @@ pub fn clear_session(session: &str) -> Result<usize> {
 pub fn count() -> Result<i64> {
     let conn = db()?;
     Ok(conn.query_row("SELECT COUNT(*) FROM memory", [], |r| r.get(0))?)
+}
+
+/// Branch a session from a specific parent ID
+pub fn remember_branch(session: &str, question: &str, answer: &str, parent_id: Option<i64>) -> Result<i64> {
+    let conn = db()?;
+    conn.execute(
+        "INSERT INTO memory(session,question,answer,parent_id) VALUES(?1,?2,?3,?4)",
+        params![session, question, answer, parent_id],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+/// Retrieve the specific lineage of a conversation branch
+pub fn recall_lineage(tail_id: i64, limit: usize) -> Result<Vec<(String, String)>> {
+    let conn = db()?;
+    let mut lineage = Vec::new();
+    let mut current = Some(tail_id);
+    
+    for _ in 0..limit {
+        if let Some(id) = current {
+            let mut stmt = conn.prepare("SELECT question, answer, parent_id FROM memory WHERE id = ?1")?;
+            let mut iter = stmt.query_map([id], |r| {
+                Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, Option<i64>>(2)?))
+            })?;
+            
+            if let Some(Ok((q, a, parent))) = iter.next() {
+                lineage.push((q, a));
+                current = parent;
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    lineage.reverse(); // Newest last for chronological lineage
+    Ok(lineage)
 }

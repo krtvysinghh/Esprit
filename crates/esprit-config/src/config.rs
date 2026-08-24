@@ -5,8 +5,12 @@ use std::{fs, path::PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    /// Ollama model to use for generation.
+    /// Default Ollama model to use for generation.
     pub ai_model: String,
+    /// Fast/small model for quick tasks (e.g. summarization, routing).
+    pub ai_model_fast: String,
+    /// Deep/large model for complex reasoning or refactoring.
+    pub ai_model_deep: String,
     /// Ollama service URL.
     pub ollama_url: String,
     /// Root directory of the current workspace.
@@ -25,6 +29,8 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             ai_model: std::env::var("ESPRIT_MODEL").unwrap_or_else(|_| "qwen3:1.7b".into()),
+            ai_model_fast: std::env::var("ESPRIT_MODEL_FAST").unwrap_or_else(|_| "qwen3:0.6b".into()),
+            ai_model_deep: std::env::var("ESPRIT_MODEL_DEEP").unwrap_or_else(|_| "llama3:8b".into()),
             ollama_url: std::env::var("OLLAMA_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:11434".into()),
             workspace: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
@@ -87,5 +93,23 @@ impl Config {
     pub fn set_model(&mut self, model: impl Into<String>) -> Result<()> {
         self.ai_model = model.into();
         self.save()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TaskComplexity {
+    Fast,
+    Default,
+    Deep,
+}
+
+impl Config {
+    /// Routes the task to the appropriate model based on requested complexity
+    pub fn route_model(&self, complexity: TaskComplexity) -> &str {
+        match complexity {
+            TaskComplexity::Fast => &self.ai_model_fast,
+            TaskComplexity::Deep => &self.ai_model_deep,
+            TaskComplexity::Default => &self.ai_model,
+        }
     }
 }

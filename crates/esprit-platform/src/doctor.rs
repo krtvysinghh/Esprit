@@ -20,7 +20,7 @@ pub struct DoctorReport {
 }
 
 /// Run a command and capture its stdout, returning `None` on failure.
-fn capture(cmd: &str, args: &[&str]) -> Option<String> {
+pub fn capture(cmd: &str, args: &[&str]) -> Option<String> {
     Command::new(cmd)
         .args(args)
         .output()

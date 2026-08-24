@@ -89,6 +89,15 @@ enum Commands {
     /// Check system health and tool availability.
     Doctor,
 
+    /// Developer Diary notes linked to current git branch
+    Diary {
+        /// Note content to save (if empty, lists existing notes)
+        note: Option<String>,
+    },
+
+    /// Terminal TUI Dashboard for metrics
+    Dashboard,
+
     /// Print Esprit version and build info.
     Version,
 
@@ -592,21 +601,40 @@ fn main() -> Result<()> {
 
             let sp = spinner("Thinking…");
             let t = Instant::now();
-            let result = esprit_rag::ask_with_meta(&prompt);
+            let _ai = esprit_ai::Ai::default_model().expect("model load");
             sp.finish_and_clear();
+
+            println!("\n  {}\n", "─".repeat(52).dimmed());
+            print!("  "); // Initial indent
+
+            let mut current_line_len = 2;
+            let result = esprit_rag::ask_stream(&prompt, |chunk| {
+                for c in chunk.chars() {
+                    if c == '\n' {
+                        println!();
+                        print!("  ");
+                        current_line_len = 2;
+                    } else {
+                        print!("{c}");
+                        current_line_len += 1;
+                        if current_line_len >= 74 && c.is_whitespace() {
+                            println!();
+                            print!("  ");
+                            current_line_len = 2;
+                        }
+                    }
+                }
+                use std::io::Write;
+                let _ = std::io::stdout().flush();
+            });
 
             match result {
                 Err(e) => {
                     fail(&format!("{e}"));
-                    warn("Is Ollama running?  Try: ollama serve");
+                    warn("Is Ollama running?  Try: esprit model pull <id>");
                 }
-                Ok((answer, meta)) => {
-                    println!("\n  {}\n", "─".repeat(52).dimmed());
-                    // Word-wrap answer to 72 chars with indent
-                    for line in answer.lines() {
-                        println!("  {line}");
-                    }
-                    println!("\n  {}\n", "─".repeat(52).dimmed());
+                Ok((_, meta)) => {
+                    println!("\n\n  {}\n", "─".repeat(52).dimmed());
                     println!(
                         "  {} {} tokens  {}",
                         "⏱".dimmed(),
@@ -684,6 +712,35 @@ fn main() -> Result<()> {
             divider();
             kv("Stored exchanges", &n.to_string());
             println!();
+        }
+
+        // ── diary ────────────────────────────────────────────────────────────
+        Commands::Diary { note } => {
+            let branch = esprit_platform::doctor::capture("git", &["branch", "--show-current"])
+                .unwrap_or_else(|| "main".to_string());
+            let branch = branch.trim();
+
+            if let Some(content) = note {
+                diary::add_note(branch, &content)?;
+                ok(&format!("Saved note to branch '{}'", branch.bold()));
+            } else {
+                let notes = diary::list_notes(branch)?;
+                section(&format!("Diary notes for '{}'", branch.bold()));
+                divider();
+                if notes.is_empty() {
+                    println!("  (No notes found)");
+                } else {
+                    for (i, n) in notes.iter().enumerate() {
+                        println!("  {}. {}", i + 1, n);
+                    }
+                }
+                println!();
+            }
+        }
+
+        // ── dashboard ────────────────────────────────────────────────────────
+        Commands::Dashboard => {
+            dashboard::run()?;
         }
 
         // ── init ─────────────────────────────────────────────────────────────
@@ -791,5 +848,110 @@ fn format_size(bytes: u64) -> String {
         format!("{:.0}K", bytes as f64 / 1_024.0)
     } else {
         format!("{bytes}B")
+    }
+}
+
+// ── Developer Diary ────────────────────────────────────────────────────────
+pub mod diary {
+    use anyhow::Result;
+    use rusqlite::{params, Connection};
+    use std::fs;
+
+    fn db() -> Result<Connection> {
+        let dir = esprit_config::Config::load()?.workspace.join(".esprit");
+        fs::create_dir_all(&dir)?;
+        let conn = Connection::open(dir.join("diary.db"))?;
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS diary (
+                id INTEGER PRIMARY KEY,
+                branch TEXT NOT NULL,
+                note TEXT NOT NULL,
+                created_at INTEGER NOT NULL DEFAULT (unixepoch())
+            )",
+            [],
+        )?;
+        Ok(conn)
+    }
+
+    pub fn add_note(branch: &str, note: &str) -> Result<()> {
+        let conn = db()?;
+        conn.execute(
+            "INSERT INTO diary (branch, note) VALUES (?1, ?2)",
+            params![branch, note],
+        )?;
+        Ok(())
+    }
+
+    pub fn list_notes(branch: &str) -> Result<Vec<String>> {
+        let conn = db()?;
+        let mut stmt = conn.prepare("SELECT note FROM diary WHERE branch = ?1 ORDER BY created_at DESC")?;
+        let rows = stmt.query_map([branch], |r| r.get(0))?;
+        Ok(rows.filter_map(Result::ok).collect())
+    }
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────
+pub mod dashboard {
+    use anyhow::Result;
+    use crossterm::{
+        event::{self, Event, KeyCode},
+        execute,
+        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    };
+    use ratatui::{
+        backend::CrosstermBackend,
+        layout::{Constraint, Direction, Layout},
+        style::{Color, Style},
+        widgets::{Block, Borders, Paragraph},
+        Terminal,
+    };
+    use std::io;
+
+    pub fn run() -> Result<()> {
+        enable_raw_mode()?;
+        let mut stdout = io::stdout();
+        execute!(stdout, EnterAlternateScreen)?;
+        let backend = CrosstermBackend::new(stdout);
+        let mut terminal = Terminal::new(backend)?;
+
+        loop {
+            terminal.draw(|f| {
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .margin(1)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+                    .split(f.area());
+
+                let stats = format!(
+                    "Models Installed: {}\nVectors Indexed: {}\nConversations in Memory: {}\n",
+                    esprit_models::list_status().unwrap_or_default().iter().filter(|(_, x)| *x).count(),
+                    esprit_vectors::count().unwrap_or(0),
+                    esprit_memory::count().unwrap_or(0)
+                );
+
+                let top = Paragraph::new(stats)
+                    .block(Block::default().title("Esprit System Health").borders(Borders::ALL))
+                    .style(Style::default().fg(Color::Cyan));
+                
+                let bottom = Paragraph::new("Press 'q' to quit.")
+                    .block(Block::default().title("Controls").borders(Borders::ALL));
+
+                f.render_widget(top, chunks[0]);
+                f.render_widget(bottom, chunks[1]);
+            })?;
+
+            if event::poll(std::time::Duration::from_millis(100))? {
+                if let Event::Key(key) = event::read()? {
+                    if let KeyCode::Char('q') = key.code {
+                        break;
+                    }
+                }
+            }
+        }
+
+        disable_raw_mode()?;
+        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+        terminal.show_cursor()?;
+        Ok(())
     }
 }

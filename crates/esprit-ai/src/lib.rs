@@ -74,6 +74,82 @@ impl Ai {
     }
 
     /// Generate a response and return text plus metadata.
+    pub fn ask_stream<F>(&self, prompt: &str, mut cb: F) -> Result<AiMeta>
+    where
+        F: FnMut(&str),
+    {
+        let bk = backend()?;
+
+        let ctx_params = LlamaContextParams::default()
+            .with_n_ctx(Some(NonZeroU32::new(8192).expect("n_ctx must be non-zero")))
+            .with_n_batch(512);
+
+        let mut ctx = self
+            .model
+            .new_context(bk, ctx_params)
+            .map_err(|e| anyhow!("Context creation failed: {e}"))?;
+
+        let tokens = self
+            .model
+            .str_to_token(prompt, AddBos::Always)
+            .map_err(|e| anyhow!("Tokenisation failed: {e}"))?;
+
+        if tokens.is_empty() {
+            bail!("Prompt produced zero tokens");
+        }
+
+        let cap = tokens.len() + self.max_tokens;
+        let mut batch = LlamaBatch::new(cap, 1);
+
+        for (i, &token) in tokens.iter().enumerate() {
+            let is_last = i == tokens.len() - 1;
+            batch
+                .add(token, i as i32, &[0], is_last)
+                .map_err(|e| anyhow!("Batch add failed: {e}"))?;
+        }
+
+        ctx.decode(&mut batch)
+            .map_err(|e| anyhow!("Prefill decode failed: {e}"))?;
+
+        let mut sampler = LlamaSampler::chain_simple([
+            LlamaSampler::top_p(0.9, 1),
+            LlamaSampler::temp(0.7),
+            LlamaSampler::dist(42),
+        ]);
+        let mut decoder = encoding_rs::UTF_8.new_decoder();
+        let mut n_cur = tokens.len();
+        let start = std::time::Instant::now();
+        let mut n_generated: u64 = 0;
+
+        loop {
+            let token = sampler.sample(&ctx, batch.n_tokens() - 1);
+            sampler.accept(token);
+
+            if self.model.is_eog_token(token) || n_generated as usize >= self.max_tokens {
+                break;
+            }
+
+            if let Ok(piece) = self.model.token_to_piece(token, &mut decoder, false, None) {
+                cb(&piece);
+            }
+            n_generated += 1;
+
+            batch.clear();
+            batch
+                .add(token, n_cur as i32, &[0], true)
+                .map_err(|e| anyhow!("Batch add failed: {e}"))?;
+            n_cur += 1;
+
+            ctx.decode(&mut batch)
+                .map_err(|e| anyhow!("Decode failed: {e}"))?;
+        }
+
+        Ok(AiMeta {
+            tokens: n_generated,
+            duration_ms: start.elapsed().as_millis() as u64,
+        })
+    }
+
     pub fn ask_with_meta(&self, prompt: &str) -> Result<(String, AiMeta)> {
         let bk = backend()?;
 
