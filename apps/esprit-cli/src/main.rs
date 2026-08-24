@@ -1,3 +1,5 @@
+pub mod daemon;
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use indicatif::{ProgressBar, ProgressStyle};
@@ -122,6 +124,12 @@ enum Commands {
 
     /// Export the entire indexed project to a single Markdown onboarding guide
     Export,
+
+    /// Start the Esprit system daemon (background watcher & real-time pair programmer)
+    Daemon,
+
+    /// Execute a WASM plugin sandbox extension
+    Plugin { file: String, input: Option<String> },
 
     TestGaps,
 
@@ -865,6 +873,21 @@ fn main() -> Result<()> {
             std::fs::write("esprit_onboarding.md", md)?;
             sp.finish_and_clear();
             ok("Exported project intelligence to esprit_onboarding.md");
+        }
+
+        Commands::Daemon => {
+            daemon::run_daemon()?;
+        }
+
+        Commands::Plugin { file, input } => {
+            let sp = spinner("Executing WASM plugin…");
+            let input_val = input.unwrap_or_default();
+            let result = esprit_plugins::run_plugin(&file, &input_val);
+            sp.finish_and_clear();
+            match result {
+                Ok(out) => println!("  {} {}", "⚡".cyan(), out),
+                Err(e) => fail(&e.to_string()),
+            }
         }
 
         Commands::TestGaps => {

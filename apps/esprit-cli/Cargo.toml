@@ -38,3 +38,5 @@ ratatui = "0.30.2"
 crossterm = "0.29.0"
 rusqlite = { workspace = true, features = ["bundled"] }
 esprit-vectors = { version = "0.1.0", path = "../../crates/esprit-vectors" }
+notify.workspace = true
+esprit-plugins = { version = "0.1.0", path = "../../crates/esprit-plugins" }
