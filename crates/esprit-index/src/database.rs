@@ -12,9 +12,9 @@ pub(crate) fn dirs() -> Result<ProjectDirs> {
 }
 
 pub(crate) fn database_path() -> Result<PathBuf> {
-    let d = dirs()?;
-    fs::create_dir_all(d.data_dir())?;
-    Ok(d.data_dir().join("index.db"))
+    let hash = crate::workspace::get_workspace_hash();
+    let dir = crate::workspace::workspace_dir(&hash)?;
+    Ok(dir.join("index.db"))
 }
 
 pub(crate) fn open_database() -> Result<Connection> {
@@ -28,6 +28,12 @@ pub(crate) fn open_database() -> Result<Connection> {
              mtime        INTEGER NOT NULL DEFAULT 0,
              content_hash TEXT,
              language     TEXT
+         );
+         CREATE TABLE IF NOT EXISTS graph_edges(
+             source TEXT NOT NULL,
+             target TEXT NOT NULL,
+             kind TEXT NOT NULL,
+             UNIQUE(source, target, kind)
          );",
     )?;
     Ok(conn)
@@ -80,6 +86,10 @@ pub fn insert_file(path: impl AsRef<Path>) -> Result<()> {
         "INSERT OR REPLACE INTO files(path,size,mtime,language) VALUES(?1,?2,?3,?4)",
         params![path.to_string_lossy(), meta.len(), mtime, lang],
     )?;
+    
+    // Extract dependency info if this is a Cargo.toml or package.json
+    let _ = crate::graph::extract_dependencies(path);
+    
     Ok(())
 }
 

@@ -98,6 +98,15 @@ enum Commands {
     /// Terminal TUI Dashboard for metrics
     Dashboard,
 
+    /// Output the architectural graph as Mermaid JS
+    Graph,
+
+    /// Output project dependencies extracted from index
+    Deps,
+
+    /// Find source files missing test files
+    TestGaps,
+
     /// Print Esprit version and build info.
     Version,
 
@@ -116,6 +125,11 @@ enum Commands {
         /// Treat pattern as a regular expression.
         #[arg(long, short)]
         regex: bool,
+
+        /// Search across all known workspaces globally
+        #[arg(long)]
+        all: bool,
+
     },
 
     /// Show filesystem statistics for a folder.
@@ -358,10 +372,14 @@ fn main() -> Result<()> {
         }
 
         // ── search ───────────────────────────────────────────────────────────
-        Commands::Search { pattern, regex: _ } => {
+        Commands::Search { pattern, regex: _, all } => {
             let sp = spinner(&format!("Searching for \"{}\"…", pattern.bold()));
             let t = Instant::now();
-            let results = esprit_index::search(&pattern);
+            let results = if all {
+                esprit_index::search_all_workspaces(&pattern)
+            } else {
+                esprit_index::search(&pattern)
+            };
             sp.finish_and_clear();
 
             match results {
@@ -739,6 +757,51 @@ fn main() -> Result<()> {
         }
 
         // ── dashboard ────────────────────────────────────────────────────────
+        Commands::Graph => {
+            let graph = esprit_index::graph::build_graph()?;
+            let mermaid = esprit_index::graph::to_mermaid(&graph);
+            println!("{mermaid}");
+        }
+        Commands::Deps => {
+            let graph = esprit_index::graph::build_graph()?;
+            section("Project Dependencies (from index)");
+            divider();
+            for edge in graph.graph.edge_indices() {
+                if let Some((s_idx, t_idx)) = graph.graph.edge_endpoints(edge) {
+                    let src = &graph.graph[s_idx];
+                    let tgt = &graph.graph[t_idx];
+                    let kind = &graph.graph[edge];
+                    println!("  {src} -> {tgt} ({kind})");
+                }
+            }
+            println!();
+        }
+        Commands::TestGaps => {
+            section("Test Gap Finder");
+            divider();
+            let files = esprit_index::all_files()?;
+            let mut sources = Vec::new();
+            let mut tests = Vec::new();
+            for f in files {
+                let s = f.path.to_string_lossy().to_string();
+                if s.contains("test") || s.contains("spec") {
+                    tests.push(s);
+                } else if s.ends_with(".rs") || s.ends_with(".js") || s.ends_with(".ts") || s.ends_with(".py") {
+                    sources.push(s);
+                }
+            }
+            let mut gaps = 0;
+            for src in &sources {
+                let name = std::path::Path::new(src).file_stem().unwrap_or_default().to_string_lossy();
+                let has_test = tests.iter().any(|t| t.contains(&*name));
+                if !has_test {
+                    println!("  {} Missing test for: {}", "○".dimmed(), src);
+                    gaps += 1;
+                }
+            }
+            println!("\n  Found {gaps} source files without matching test files.\n");
+        }
+
         Commands::Dashboard => {
             dashboard::run()?;
         }

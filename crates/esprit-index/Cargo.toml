@@ -16,3 +16,7 @@ directories.workspace = true
 rusqlite.workspace    = true
 tantivy.workspace     = true
 tracing.workspace     = true
+petgraph = "0.8.3"
+toml.workspace = true
+serde_json.workspace = true
+esprit-utils = { version = "0.1.0", path = "../esprit-utils" }
