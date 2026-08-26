@@ -1,7 +1,7 @@
 use anyhow::Result;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use esprit_platform::doctor::capture;
 
 pub fn run_daemon() -> Result<()> {
@@ -16,6 +16,7 @@ pub fn run_daemon() -> Result<()> {
     println!("Watching workspace: {}", path.display());
     
     let mut last_git_status = String::new();
+    let mut last_reindex = Instant::now() - Duration::from_secs(60); // Allow immediate first reindex
 
     loop {
         // Handle file system events
@@ -30,9 +31,10 @@ pub fn run_daemon() -> Result<()> {
                             break;
                         }
                     }
-                    if needs_reindex {
-                        println!("[Daemon] File change detected. Triggering instant re-indexing...");
+                    if needs_reindex && last_reindex.elapsed() > Duration::from_secs(30) {
+                        println!("[Daemon] File change detected. Triggering debounced re-indexing...");
                         let _ = esprit_index::rebuild_search_index();
+                        last_reindex = Instant::now();
                     }
                 }
                 _ => {}

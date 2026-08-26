@@ -645,7 +645,10 @@ fn main() -> Result<()> {
 
             let sp = spinner("Thinking…");
             let t = Instant::now();
-            let _ai = esprit_ai::Ai::default_model().expect("model load");
+            let _ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
             sp.finish_and_clear();
 
             println!("\n  {}\n", "─".repeat(52).dimmed());
@@ -805,7 +808,10 @@ fn main() -> Result<()> {
         Commands::Diff => {
             let sp = spinner("Analyzing git diff…");
             let diff = esprit_platform::doctor::capture("git", &["diff", "HEAD"]).unwrap_or_default();
-            let ai = esprit_ai::Ai::default_model().expect("model load");
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
             sp.finish_and_clear();
             if diff.trim().is_empty() {
                 println!("  No changes found in git diff.");
@@ -819,7 +825,10 @@ fn main() -> Result<()> {
         Commands::Review => {
             let sp = spinner("Reviewing staged changes…");
             let diff = esprit_platform::doctor::capture("git", &["diff", "--cached"]).unwrap_or_default();
-            let ai = esprit_ai::Ai::default_model().expect("model load");
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
             sp.finish_and_clear();
             if diff.trim().is_empty() {
                 println!("  No staged changes to review.");
@@ -833,7 +842,10 @@ fn main() -> Result<()> {
         Commands::Annotate { file } => {
             let sp = spinner(&format!("Annotating {file}…"));
             if let Ok(content) = std::fs::read_to_string(&file) {
-                let ai = esprit_ai::Ai::default_model().expect("model load");
+                let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
                 sp.finish_and_clear();
                 let prompt = format!("Add missing docstrings and inline comments to this code. Output ONLY the updated code:\n\n{content}");
                 println!("\n  {}\n", "─".repeat(52).dimmed());
@@ -846,7 +858,10 @@ fn main() -> Result<()> {
         }
         Commands::Plan { goal } => {
             let sp = spinner("Formulating refactoring plan…");
-            let ai = esprit_ai::Ai::default_model().expect("model load");
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
             sp.finish_and_clear();
             let prompt = format!("Create a step-by-step structural refactoring plan to achieve this goal:\n\n{goal}");
             println!("\n  {}\n", "─".repeat(52).dimmed());
@@ -856,7 +871,10 @@ fn main() -> Result<()> {
         Commands::Triage => {
             let sp = spinner("Triaging impact…");
             let diff = esprit_platform::doctor::capture("git", &["diff", "--name-only", "HEAD"]).unwrap_or_default();
-            let ai = esprit_ai::Ai::default_model().expect("model load");
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
             sp.finish_and_clear();
             let prompt = format!("Based on these modified files, list the specific test files or testing areas that MUST be run to ensure no regressions:\n\n{diff}");
             println!("\n  {}\n", "─".repeat(52).dimmed());

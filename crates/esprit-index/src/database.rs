@@ -74,9 +74,11 @@ pub fn insert_file(path: impl AsRef<Path>) -> Result<()> {
         return Ok(());
     }
     let meta = path.metadata()?;
-    if let Ok(content) = fs::read_to_string(path) {
+    if meta.len() < 10_000_000 && meta.len() > 0 {
+        if let Ok(content) = fs::read_to_string(path) {
         if content.contains("AKIA") || content.contains("BEGIN RSA PRIVATE KEY") || content.contains("eyJhbGciOi") {
             println!("\n\033[31m[WARNING] Possible secret/key found in: {}\033[0m\n", path.display());
+        }
         }
     }
 
