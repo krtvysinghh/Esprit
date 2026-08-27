@@ -98,6 +98,20 @@ enum Commands {
     },
 
     /// Terminal TUI Dashboard for metrics
+    Find {
+        query: String,
+    },
+
+    /// Trace a function's call graph using AI
+    Trace {
+        function: String,
+    },
+
+    /// Detect if a file's docstrings have drifted from its implementation
+    Drift {
+        file: String,
+    },
+
     Dashboard,
 
     /// Output the architectural graph as Mermaid JS
@@ -114,10 +128,14 @@ enum Commands {
     Review,
 
     /// Generate missing docstrings for a file
-    Annotate { file: String },
+    Annotate {
+        file: String,
+    },
 
     /// Generate a step-by-step refactoring plan
-    Plan { goal: String },
+    Plan {
+        goal: String,
+    },
 
     /// Triage which tests to run based on recent changes
     Triage,
@@ -129,7 +147,10 @@ enum Commands {
     Daemon,
 
     /// Execute a WASM plugin sandbox extension
-    Plugin { file: String, input: Option<String> },
+    Plugin {
+        file: String,
+        input: Option<String>,
+    },
 
     TestGaps,
 
@@ -155,7 +176,6 @@ enum Commands {
         /// Search across all known workspaces globally
         #[arg(long)]
         all: bool,
-
     },
 
     /// Show filesystem statistics for a folder.
@@ -232,6 +252,9 @@ enum Commands {
 
     /// Show conversation memory stats.
     MemoryStats,
+
+    /// Compress long-term chat memory to free up context
+    MemoryCompress,
 
     /// Download default models and set up Esprit for first use.
     Init {
@@ -398,7 +421,11 @@ fn main() -> Result<()> {
         }
 
         // ── search ───────────────────────────────────────────────────────────
-        Commands::Search { pattern, regex: _, all } => {
+        Commands::Search {
+            pattern,
+            regex: _,
+            all,
+        } => {
             let sp = spinner(&format!("Searching for \"{}\"…", pattern.bold()));
             let t = Instant::now();
             let results = if all {
@@ -748,11 +775,43 @@ fn main() -> Result<()> {
 
         // ── memory-clear ─────────────────────────────────────────────────────
         Commands::MemoryClear => {
-            let n = esprit_memory::clear()?;
-            ok(&format!("Cleared {n} memory entries."));
+            esprit_memory::clear()?;
+            ok("Conversation memory cleared.");
         }
 
-        // ── memory-stats ─────────────────────────────────────────────────────
+        Commands::MemoryCompress => {
+            let sp = spinner("Compressing memory...");
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded.");
+                std::process::exit(1);
+            });
+            let rows = esprit_memory::fetch_last(10).unwrap_or_default();
+            if rows.is_empty() {
+                sp.finish_and_clear();
+                ok("Memory is already empty.");
+            } else {
+                let mut ctx = String::new();
+                for (id, txt) in rows {
+                    ctx.push_str(&format!("{id}: {txt}\n"));
+                }
+                let prompt = format!(
+                    "Summarize this chat history into a dense knowledge summary:
+
+{ctx}"
+                );
+                if let Ok(summary) = ai.ask(&prompt) {
+                    let _ = esprit_memory::clear();
+                    let _ =
+                        esprit_memory::append("System", &format!("Compressed Memory: {summary}"));
+                    sp.finish_and_clear();
+                    ok("Memory compressed successfully.");
+                } else {
+                    sp.finish_and_clear();
+                    fail("Failed to compress memory.");
+                }
+            }
+        }
+
         Commands::MemoryStats => {
             let n = esprit_memory::count()?;
             section("Conversation Memory");
@@ -807,7 +866,8 @@ fn main() -> Result<()> {
         }
         Commands::Diff => {
             let sp = spinner("Analyzing git diff…");
-            let diff = esprit_platform::doctor::capture("git", &["diff", "HEAD"]).unwrap_or_default();
+            let diff =
+                esprit_platform::doctor::capture("git", &["diff", "HEAD"]).unwrap_or_default();
             let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
                 fail("AI model not loaded. Run `esprit init` first.");
                 std::process::exit(1);
@@ -816,7 +876,8 @@ fn main() -> Result<()> {
             if diff.trim().is_empty() {
                 println!("  No changes found in git diff.");
             } else {
-                let prompt = format!("Summarize this git diff into a concise commit message:\n\n{diff}");
+                let prompt =
+                    format!("Summarize this git diff into a concise commit message:\n\n{diff}");
                 println!("\n  {}\n", "─".repeat(52).dimmed());
                 let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
                 println!("\n\n  {}\n", "─".repeat(52).dimmed());
@@ -824,7 +885,8 @@ fn main() -> Result<()> {
         }
         Commands::Review => {
             let sp = spinner("Reviewing staged changes…");
-            let diff = esprit_platform::doctor::capture("git", &["diff", "--cached"]).unwrap_or_default();
+            let diff =
+                esprit_platform::doctor::capture("git", &["diff", "--cached"]).unwrap_or_default();
             let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
                 fail("AI model not loaded. Run `esprit init` first.");
                 std::process::exit(1);
@@ -843,9 +905,9 @@ fn main() -> Result<()> {
             let sp = spinner(&format!("Annotating {file}…"));
             if let Ok(content) = std::fs::read_to_string(&file) {
                 let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
-                fail("AI model not loaded. Run `esprit init` first.");
-                std::process::exit(1);
-            });
+                    fail("AI model not loaded. Run `esprit init` first.");
+                    std::process::exit(1);
+                });
                 sp.finish_and_clear();
                 let prompt = format!("Add missing docstrings and inline comments to this code. Output ONLY the updated code:\n\n{content}");
                 println!("\n  {}\n", "─".repeat(52).dimmed());
@@ -863,14 +925,17 @@ fn main() -> Result<()> {
                 std::process::exit(1);
             });
             sp.finish_and_clear();
-            let prompt = format!("Create a step-by-step structural refactoring plan to achieve this goal:\n\n{goal}");
+            let prompt = format!(
+                "Create a step-by-step structural refactoring plan to achieve this goal:\n\n{goal}"
+            );
             println!("\n  {}\n", "─".repeat(52).dimmed());
             let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
             println!("\n\n  {}\n", "─".repeat(52).dimmed());
         }
         Commands::Triage => {
             let sp = spinner("Triaging impact…");
-            let diff = esprit_platform::doctor::capture("git", &["diff", "--name-only", "HEAD"]).unwrap_or_default();
+            let diff = esprit_platform::doctor::capture("git", &["diff", "--name-only", "HEAD"])
+                .unwrap_or_default();
             let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
                 fail("AI model not loaded. Run `esprit init` first.");
                 std::process::exit(1);
@@ -918,13 +983,20 @@ fn main() -> Result<()> {
                 let s = f.path.to_string_lossy().to_string();
                 if s.contains("test") || s.contains("spec") {
                     tests.push(s);
-                } else if s.ends_with(".rs") || s.ends_with(".js") || s.ends_with(".ts") || s.ends_with(".py") {
+                } else if s.ends_with(".rs")
+                    || s.ends_with(".js")
+                    || s.ends_with(".ts")
+                    || s.ends_with(".py")
+                {
                     sources.push(s);
                 }
             }
             let mut gaps = 0;
             for src in &sources {
-                let name = std::path::Path::new(src).file_stem().unwrap_or_default().to_string_lossy();
+                let name = std::path::Path::new(src)
+                    .file_stem()
+                    .unwrap_or_default()
+                    .to_string_lossy();
                 let has_test = tests.iter().any(|t| t.contains(&*name));
                 if !has_test {
                     println!("  {} Missing test for: {}", "○".dimmed(), src);
@@ -932,6 +1004,94 @@ fn main() -> Result<()> {
                 }
             }
             println!("\n  Found {gaps} source files without matching test files.\n");
+        }
+
+        Commands::Find { query } => {
+            let sp = spinner("Semantic search...");
+            let _ = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
+            let emb = esprit_embeddings::embed(&query).unwrap_or_default();
+            sp.finish_and_clear();
+            if let Some(query_vec) = emb {
+                let results = esprit_vectors::nearest(&query_vec, 5).unwrap_or_default();
+                section("Semantic Search Results");
+                divider();
+                if results.is_empty() {
+                    println!("  No indexed code found. Have you modified files yet?");
+                } else {
+                    for (path, score) in results {
+                        println!("  {} [{:.2}] {}", "○".dimmed(), score, path.cyan());
+                    }
+                }
+            } else {
+                fail("Embedding model not ready.");
+            }
+            println!();
+        }
+
+        Commands::Trace { function } => {
+            let sp = spinner(&format!("Tracing function {}...", function.bold()));
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
+
+            // 1. Ripgrep to find the function
+            let rg_out = esprit_platform::doctor::capture("rg", &["-n", "-C", "10", &function])
+                .unwrap_or_default();
+            sp.finish_and_clear();
+
+            if rg_out.is_empty() {
+                fail("Function not found in the codebase.");
+            } else {
+                let prompt = format!(
+                    "Analyze the following code search results for the function `{}`.
+                     Identify what this function does, what other internal functions it calls, and what external dependencies it relies on.
+                     Draw a textual call graph.
+
+Code context:
+{}",
+                    function,
+                    rg_out.chars().take(4000).collect::<String>()
+                );
+                section(&format!("Call Trace: {}", function));
+                divider();
+                let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
+                println!();
+            }
+        }
+
+        Commands::Drift { file } => {
+            let sp = spinner(&format!(
+                "Checking for documentation drift in {}...",
+                file.bold()
+            ));
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded. Run `esprit init` first.");
+                std::process::exit(1);
+            });
+
+            if let Ok(content) = std::fs::read_to_string(&file) {
+                sp.finish_and_clear();
+                let prompt = format!(
+                    "You are a strict code reviewer. Read the following code from `{}`.
+                     Identify any docstrings, comments, or documentation blocks that NO LONGER MATCH the actual implementation logic.
+                     If everything matches, just say 'No documentation drift detected.'
+
+Code:
+{}",
+                    file, content
+                );
+                section(&format!("Doc-Drift Report: {}", file));
+                divider();
+                let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
+                println!();
+            } else {
+                sp.finish_and_clear();
+                fail("Could not read the specified file.");
+            }
         }
 
         Commands::Dashboard => {
@@ -1079,7 +1239,8 @@ pub mod diary {
 
     pub fn list_notes(branch: &str) -> Result<Vec<String>> {
         let conn = db()?;
-        let mut stmt = conn.prepare("SELECT note FROM diary WHERE branch = ?1 ORDER BY created_at DESC")?;
+        let mut stmt =
+            conn.prepare("SELECT note FROM diary WHERE branch = ?1 ORDER BY created_at DESC")?;
         let rows = stmt.query_map([branch], |r| r.get(0))?;
         Ok(rows.filter_map(Result::ok).collect())
     }
@@ -1119,15 +1280,23 @@ pub mod dashboard {
 
                 let stats = format!(
                     "Models Installed: {}\nVectors Indexed: {}\nConversations in Memory: {}\n",
-                    esprit_models::list_status().unwrap_or_default().iter().filter(|(_, x)| *x).count(),
+                    esprit_models::list_status()
+                        .unwrap_or_default()
+                        .iter()
+                        .filter(|(_, x)| *x)
+                        .count(),
                     esprit_vectors::count().unwrap_or(0),
                     esprit_memory::count().unwrap_or(0)
                 );
 
                 let top = Paragraph::new(stats)
-                    .block(Block::default().title("Esprit System Health").borders(Borders::ALL))
+                    .block(
+                        Block::default()
+                            .title("Esprit System Health")
+                            .borders(Borders::ALL),
+                    )
                     .style(Style::default().fg(Color::Cyan));
-                
+
                 let bottom = Paragraph::new("Press 'q' to quit.")
                     .block(Block::default().title("Controls").borders(Borders::ALL));
 

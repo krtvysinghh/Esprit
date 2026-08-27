@@ -22,10 +22,8 @@ pub fn all_workspaces() -> Result<Vec<PathBuf>> {
     let mut out = Vec::new();
     let w_dir = dirs.data_dir().join("workspaces");
     if w_dir.exists() {
-        for entry in fs::read_dir(w_dir)? {
-            if let Ok(entry) = entry {
-                out.push(entry.path());
-            }
+        for entry in fs::read_dir(w_dir)?.flatten() {
+            out.push(entry.path());
         }
     }
     Ok(out)

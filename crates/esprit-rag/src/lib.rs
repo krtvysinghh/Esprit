@@ -25,7 +25,11 @@ where
     let mut sem_paths = Vec::new();
     if let Some(ref qv) = query_vec {
         if esprit_vectors::count().unwrap_or(0) > 0 {
-            sem_paths = nearest(qv, MAX_CONTEXT_FILES).unwrap_or_default().into_iter().map(|(k, _)| k).collect();
+            sem_paths = nearest(qv, MAX_CONTEXT_FILES)
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(k, _)| k)
+                .collect();
         }
     }
     let kw_paths = search(question).unwrap_or_default();
@@ -46,9 +50,23 @@ where
         }
     }
 
-    let history = recall(5).unwrap_or_default().into_iter().rev().map(|(q, a)| format!("User: {q}\nAssistant: {a}")).collect::<Vec<_>>().join("\n\n");
-    let history_section = if history.is_empty() { String::new() } else { format!("# Conversation History\n\n{history}\n\n") };
-    let context_section = if context.is_empty() { "No relevant project files were found for this query.".to_string() } else { format!("# Project Context\n{context}") };
+    let history = recall(5)
+        .unwrap_or_default()
+        .into_iter()
+        .rev()
+        .map(|(q, a)| format!("User: {q}\nAssistant: {a}"))
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    let history_section = if history.is_empty() {
+        String::new()
+    } else {
+        format!("# Conversation History\n\n{history}\n\n")
+    };
+    let context_section = if context.is_empty() {
+        "No relevant project files were found for this query.".to_string()
+    } else {
+        format!("# Project Context\n{context}")
+    };
     let prompt = format!("You are Esprit AI, an expert assistant with access to the user's indexed project.\n\nAnswer ONLY from the supplied context. If the answer is absent, say:\n\"I couldn't find that in the indexed project.\"\n\n{history_section}{context_section}\n\n# Question\n\n{question}\n\nAnswer:");
 
     let ai = Ai::default_model()?;
