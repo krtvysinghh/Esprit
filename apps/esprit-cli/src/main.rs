@@ -1012,7 +1012,9 @@ fn main() -> Result<()> {
                 fail("AI model not loaded. Run `esprit init` first.");
                 std::process::exit(1);
             });
-            let emb = esprit_embeddings::embed(&query).unwrap_or_default().unwrap_or_default();
+            let emb = esprit_embeddings::embed(&query)
+                .unwrap_or_default()
+                .unwrap_or_default();
             sp.finish_and_clear();
             if !emb.is_empty() {
                 let results = esprit_vectors::nearest(&emb, 5).unwrap_or_default();
