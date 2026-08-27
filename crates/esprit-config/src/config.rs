@@ -29,8 +29,10 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             ai_model: std::env::var("ESPRIT_MODEL").unwrap_or_else(|_| "qwen3:1.7b".into()),
-            ai_model_fast: std::env::var("ESPRIT_MODEL_FAST").unwrap_or_else(|_| "qwen3:0.6b".into()),
-            ai_model_deep: std::env::var("ESPRIT_MODEL_DEEP").unwrap_or_else(|_| "llama3:8b".into()),
+            ai_model_fast: std::env::var("ESPRIT_MODEL_FAST")
+                .unwrap_or_else(|_| "qwen3:0.6b".into()),
+            ai_model_deep: std::env::var("ESPRIT_MODEL_DEEP")
+                .unwrap_or_else(|_| "llama3:8b".into()),
             ollama_url: std::env::var("OLLAMA_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:11434".into()),
             workspace: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),

@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[allow(dead_code)]
 pub(crate) fn dirs() -> Result<ProjectDirs> {
     ProjectDirs::from("dev", "esprit", "esprit")
         .ok_or_else(|| anyhow!("unable to determine data directory"))
@@ -76,9 +77,15 @@ pub fn insert_file(path: impl AsRef<Path>) -> Result<()> {
     let meta = path.metadata()?;
     if meta.len() < 10_000_000 && meta.len() > 0 {
         if let Ok(content) = fs::read_to_string(path) {
-        if content.contains("AKIA") || content.contains("BEGIN RSA PRIVATE KEY") || content.contains("eyJhbGciOi") {
-            println!("\n\033[31m[WARNING] Possible secret/key found in: {}\033[0m\n", path.display());
-        }
+            if content.contains("AKIA")
+                || content.contains("BEGIN RSA PRIVATE KEY")
+                || content.contains("eyJhbGciOi")
+            {
+                println!(
+                    "\n\033[31m[WARNING] Possible secret/key found in: {}\033[0m\n",
+                    path.display()
+                );
+            }
         }
     }
 
@@ -94,10 +101,10 @@ pub fn insert_file(path: impl AsRef<Path>) -> Result<()> {
         "INSERT OR REPLACE INTO files(path,size,mtime,language) VALUES(?1,?2,?3,?4)",
         params![path.to_string_lossy(), meta.len(), mtime, lang],
     )?;
-    
+
     // Extract dependency info if this is a Cargo.toml or package.json
     let _ = crate::graph::extract_dependencies(path);
-    
+
     Ok(())
 }
 

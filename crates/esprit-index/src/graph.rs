@@ -18,7 +18,10 @@ pub fn add_edge(source: &str, target: &str, kind: &str) -> Result<()> {
 /// Parse dependencies from known file types
 pub fn extract_dependencies(path: &Path) -> Result<()> {
     let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-    let parent = path.parent().unwrap_or_else(|| Path::new("")).to_string_lossy();
+    let parent = path
+        .parent()
+        .unwrap_or_else(|| Path::new(""))
+        .to_string_lossy();
 
     match file_name {
         "Cargo.toml" => {
@@ -79,10 +82,14 @@ pub fn build_graph() -> Result<GraphData> {
 
     for edge in edges.filter_map(Result::ok) {
         let (src, tgt, kind) = edge;
-        
-        let src_idx = *nodes.entry(src.clone()).or_insert_with(|| graph.add_node(src));
-        let tgt_idx = *nodes.entry(tgt.clone()).or_insert_with(|| graph.add_node(tgt));
-        
+
+        let src_idx = *nodes
+            .entry(src.clone())
+            .or_insert_with(|| graph.add_node(src));
+        let tgt_idx = *nodes
+            .entry(tgt.clone())
+            .or_insert_with(|| graph.add_node(tgt));
+
         graph.add_edge(src_idx, tgt_idx, kind);
     }
     Ok(GraphData { graph })
@@ -96,12 +103,14 @@ pub fn to_mermaid(gd: &GraphData) -> String {
             let src = &gd.graph[src_idx];
             let tgt = &gd.graph[tgt_idx];
             let kind = &gd.graph[edge];
-            
+
             let s = src.replace("-", "_").replace(".", "_").replace("/", "_");
             let t = tgt.replace("-", "_").replace(".", "_").replace("/", "_");
             let lbl = kind.replace("_", " ");
-            
-            out.push_str(&format!("    {s}[\"{src}\"] -->|\"{lbl}\"| {t}[\"{tgt}\"];\n"));
+
+            out.push_str(&format!(
+                "    {s}[\"{src}\"] -->|\"{lbl}\"| {t}[\"{tgt}\"];\n"
+            ));
         }
     }
     out.push_str("```\n");

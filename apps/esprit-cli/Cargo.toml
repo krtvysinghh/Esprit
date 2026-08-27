@@ -40,3 +40,4 @@ rusqlite = { workspace = true, features = ["bundled"] }
 esprit-vectors = { version = "0.1.0", path = "../../crates/esprit-vectors" }
 notify.workspace = true
 esprit-plugins = { version = "0.1.0", path = "../../crates/esprit-plugins" }
+esprit-embeddings = { version = "0.1.0", path = "../../crates/esprit-embeddings" }

@@ -4,9 +4,6 @@ use ignore::WalkBuilder;
 use rusqlite::params;
 use std::path::Path;
 
-/// Index all files under `root`, respecting `.gitignore`, `.ignore`, and
-/// other standard ignore rules. Uses incremental update: files whose
-/// modification time has not changed since the last index are skipped.
 pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
     let root = root.as_ref();
     let conn = open_database()?;
@@ -18,7 +15,7 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
         .git_global(true)
         .git_exclude(true)
         .ignore(true)
-        .hidden(false) // include dotfiles (but not .git contents)
+        .hidden(false)
         .build();
 
     for result in walker {
@@ -35,8 +32,6 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
         }
 
         let path = entry.path();
-
-        // Skip .git directory contents explicitly
         if path
             .components()
             .any(|c| c.as_os_str() == ".git" || c.as_os_str() == "target")
@@ -46,10 +41,7 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
 
         let meta = match entry.metadata() {
             Ok(m) => m,
-            Err(e) => {
-                tracing::warn!("metadata error for {}: {e}", path.display());
-                continue;
-            }
+            Err(_) => continue,
         };
 
         let mtime = meta
@@ -62,7 +54,6 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
         let path_str = path.to_string_lossy().to_string();
         let lang = crate::database::detect_language(path);
 
-        // Incremental: skip if mtime is unchanged
         let existing_mtime: Option<i64> = conn
             .query_row("SELECT mtime FROM files WHERE path=?1", [&path_str], |r| {
                 r.get(0)
@@ -81,6 +72,21 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<IndexedFile>> {
             "INSERT OR REPLACE INTO files(path,size,mtime,language) VALUES(?1,?2,?3,?4)",
             params![path_str, meta.len(), mtime, lang],
         )?;
+
+        // Compute embedding if it's a small source file (skip huge ones)
+        if meta.len() < 500_000 && esprit_embeddings::is_available() {
+            if let Ok(content) = std::fs::read_to_string(path) {
+                // Truncate to first 1000 bytes for context length
+                let truncated = if content.len() > 1000 {
+                    &content[..1000]
+                } else {
+                    &content
+                };
+                if let Ok(Some(emb)) = esprit_embeddings::embed(truncated) {
+                    let _ = esprit_vectors::store(&path_str, &emb);
+                }
+            }
+        }
 
         files.push(IndexedFile {
             path: path.to_path_buf(),

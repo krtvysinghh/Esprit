@@ -1622,6 +1622,7 @@ dependencies = [
  "esprit-ai",
  "esprit-config",
  "esprit-core",
+ "esprit-embeddings",
  "esprit-filesystem",
  "esprit-index",
  "esprit-memory",
@@ -1731,7 +1732,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "directories",
+ "esprit-embeddings",
  "esprit-utils",
+ "esprit-vectors",
  "ignore",
  "petgraph 0.8.3",
  "rusqlite",
