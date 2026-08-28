@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use anyhow::{anyhow, bail, Result};
 use directories::ProjectDirs;
 use indicatif::{ProgressBar, ProgressStyle};
