@@ -41,3 +41,6 @@ pub fn sha256(data: impl AsRef<[u8]>) -> String {
 // dummy change 38
 
 // dummy change 39
+
+/// Core package version
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
