@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use dashmap::DashMap;
 use std::hash::Hash;
 
