@@ -76,6 +76,7 @@ pub fn clear_session(session: &str) -> Result<usize> {
 }
 
 /// Total number of stored exchanges.
+#[must_use]
 pub fn count() -> Result<i64> {
     let conn = db()?;
     Ok(conn.query_row("SELECT COUNT(*) FROM memory", [], |r| r.get(0))?)
