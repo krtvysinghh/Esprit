@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 pub mod doctor;
 mod watch;
 
