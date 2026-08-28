@@ -25,3 +25,5 @@ release/
 .env*
 
 secrets.json
+
+config.local.toml
