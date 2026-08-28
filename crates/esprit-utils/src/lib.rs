@@ -5,3 +5,5 @@ pub fn sha256(data: impl AsRef<[u8]>) -> String {
     h.update(data.as_ref());
     hex::encode(h.finalize())
 }
+
+// dummy change 21
