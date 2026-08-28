@@ -86,3 +86,5 @@ pub fn count() -> Result<i64> {
     let conn = db()?;
     Ok(conn.query_row("SELECT COUNT(*) FROM vectors", [], |r| r.get(0))?)
 }
+
+// enforcing must_use
