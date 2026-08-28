@@ -23,3 +23,5 @@ release/
 *.pem
 
 .env*
+
+secrets.json
