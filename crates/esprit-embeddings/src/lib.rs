@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use anyhow::{anyhow, Result};
 use llama_cpp_2::{
     context::params::LlamaContextParams,
