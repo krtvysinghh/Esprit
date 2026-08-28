@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use anyhow::{anyhow, Result};
 use directories::ProjectDirs;
 use rusqlite::{params, Connection};
