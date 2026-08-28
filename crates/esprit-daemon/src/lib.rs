@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use anyhow::Result;
 use crossbeam_channel::unbounded;
 use notify::{recommended_watcher, RecursiveMode, Watcher};
