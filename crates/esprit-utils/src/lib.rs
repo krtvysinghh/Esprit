@@ -44,3 +44,6 @@ pub fn sha256(data: impl AsRef<[u8]>) -> String {
 
 /// Core package version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Global application identifier
+pub const APP_NAME: &str = "Esprit";
