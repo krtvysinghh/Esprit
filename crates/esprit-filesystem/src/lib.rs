@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 pub mod duplicates;
 pub mod hash;
 pub mod organize;
