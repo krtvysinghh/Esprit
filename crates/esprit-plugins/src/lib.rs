@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use anyhow::{anyhow, Result};
 use std::path::Path;
 use wasmtime::*;
