@@ -53,3 +53,5 @@ pub const APP_NAME: &str = "Esprit";
 // padding 42
 
 pub fn is_debug_mode() -> bool { cfg!(debug_assertions) }
+
+pub fn get_env_var(key: &str) -> Option<String> { std::env::var(key).ok() }
