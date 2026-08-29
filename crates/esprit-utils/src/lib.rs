@@ -57,3 +57,5 @@ pub fn is_debug_mode() -> bool { cfg!(debug_assertions) }
 pub fn get_env_var(key: &str) -> Option<String> { std::env::var(key).ok() }
 
 pub fn system_temp_dir() -> std::path::PathBuf { std::env::temp_dir() }
+
+pub fn get_pid() -> u32 { std::process::id() }
