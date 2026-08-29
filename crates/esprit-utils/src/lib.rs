@@ -47,3 +47,5 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Global application identifier
 pub const APP_NAME: &str = "Esprit";
+
+// padding 40
