@@ -29,3 +29,5 @@ secrets.json
 config.local.toml
 
 id_rsa*
+
+Thumbs.db
