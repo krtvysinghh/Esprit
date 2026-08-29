@@ -1,4 +1,5 @@
 [package]
+publish = false
 name="esprit-core-index"
 version.workspace=true
 edition.workspace=true
