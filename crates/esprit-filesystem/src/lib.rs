@@ -1,3 +1,4 @@
+#![warn(missing_debug_implementations)]
 #![forbid(unsafe_code)]
 pub mod duplicates;
 pub mod hash;
