@@ -1,3 +1,4 @@
+#![warn(missing_debug_implementations)]
 #![forbid(unsafe_code)]
 use axum::{
     routing::{get, post},
