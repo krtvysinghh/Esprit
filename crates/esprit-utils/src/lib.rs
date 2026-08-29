@@ -51,3 +51,5 @@ pub const APP_NAME: &str = "Esprit";
 // padding 40
 
 // padding 42
+
+pub fn is_debug_mode() -> bool { cfg!(debug_assertions) }
