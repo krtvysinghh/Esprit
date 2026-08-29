@@ -49,3 +49,5 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_NAME: &str = "Esprit";
 
 // padding 40
+
+// padding 42
