@@ -34,7 +34,6 @@ pub fn store(key: &str, v: &[f32]) -> Result<()> {
 }
 
 /// Load a named embedding vector by exact key.
-#[must_use]
 pub fn load(key: &str) -> Result<Option<Vec<f32>>> {
     let c = db()?;
     let mut s = c.prepare("SELECT embedding FROM vectors WHERE key=?1")?;

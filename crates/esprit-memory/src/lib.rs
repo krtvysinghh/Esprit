@@ -1,4 +1,3 @@
-#![warn(missing_debug_implementations)]
 #![forbid(unsafe_code)]
 use anyhow::{anyhow, Result};
 use directories::ProjectDirs;
@@ -77,7 +76,6 @@ pub fn clear_session(session: &str) -> Result<usize> {
 }
 
 /// Total number of stored exchanges.
-#[must_use]
 pub fn count() -> Result<i64> {
     let conn = db()?;
     Ok(conn.query_row("SELECT COUNT(*) FROM memory", [], |r| r.get(0))?)
