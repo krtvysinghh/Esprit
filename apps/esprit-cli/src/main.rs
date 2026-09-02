@@ -111,12 +111,15 @@ enum Commands {
     Drift {
         file: String,
     },
-    
-    Debate { topic: String },
+
+    Debate {
+        topic: String,
+    },
     EnvScaffold,
     Docker,
-    Score { file: String },
-
+    Score {
+        file: String,
+    },
 
     Dashboard,
 
@@ -1072,17 +1075,23 @@ Code context:
         }
 
         Commands::Drift { file } => {
-            let sp = spinner(&format!("Checking for documentation drift in {}...", file.bold()));
+            let sp = spinner(&format!(
+                "Checking for documentation drift in {}...",
+                file.bold()
+            ));
             let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
                 fail("AI model not loaded.");
                 std::process::exit(1);
             });
             if let Ok(content) = std::fs::read_to_string(&file) {
                 sp.finish_and_clear();
-                let prompt = format!("Identify any docstrings that NO LONGER MATCH the logic in this code.
+                let prompt = format!(
+                    "Identify any docstrings that NO LONGER MATCH the logic in this code.
 
 Code:
-{}", content);
+{}",
+                    content
+                );
                 section(&format!("Doc-Drift Report: {}", file));
                 divider();
                 let _ = ai.ask_stream(&prompt, |c| print!("{c}"));
@@ -1099,50 +1108,68 @@ Code:
                 fail("AI model not loaded.");
                 std::process::exit(1);
             });
-            
+
             let sec_prompt = format!("You are a paranoid Security Engineer. Argue the security risks and defenses for this architectural topic: {topic}");
             let perf_prompt = format!("You are a ruthless Performance Engineer. Argue the performance benefits and bottlenecks for this architectural topic: {topic}");
-            
+
             let sec_resp = ai.ask(&sec_prompt).unwrap_or_default();
             let perf_resp = ai.ask(&perf_prompt).unwrap_or_default();
             sp.finish_and_clear();
-            
+
             section("🛡️ Security Engineer Persona");
-            println!("
+            println!(
+                "
 {}
-", sec_resp.cyan());
+",
+                sec_resp.cyan()
+            );
             divider();
             section("⚡ Performance Engineer Persona");
-            println!("
+            println!(
+                "
 {}
-", perf_resp.yellow());
+",
+                perf_resp.yellow()
+            );
         }
 
         Commands::EnvScaffold => {
             let sp = spinner("Scanning codebase for environment variables...");
-            let rg_out = esprit_platform::doctor::capture("rg", &["-o", r#"(?:std::env::var|process\.env\.|"env": ")[A-Z0-9_]+"#]).unwrap_or_default();
+            let rg_out = esprit_platform::doctor::capture(
+                "rg",
+                &[
+                    "-o",
+                    r#"(?:std::env::var|process\.env\.|"env": ")[A-Z0-9_]+"#,
+                ],
+            )
+            .unwrap_or_default();
             sp.finish_and_clear();
-            
+
             let mut vars = std::collections::HashSet::new();
             for line in rg_out.lines() {
-                if let Some(v) = line.split(&['"', '(', ')', '.'][..]).last() {
+                if let Some(v) = line.split(&['"', '(', ')', '.'][..]).next_back() {
                     let cleaned = v.trim_matches(|c: char| !c.is_alphanumeric() && c != '_');
                     if !cleaned.is_empty() && cleaned.chars().any(|c| c.is_alphabetic()) {
                         vars.insert(cleaned.to_string());
                     }
                 }
             }
-            
+
             if vars.is_empty() {
                 ok("No environment variables detected in the codebase.");
             } else {
                 let mut out = String::new();
                 for v in &vars {
-                    out.push_str(&format!("{v}=
-"));
+                    out.push_str(&format!(
+                        "{v}=
+"
+                    ));
                 }
                 std::fs::write(".env.example", &out).unwrap();
-                ok(&format!("Successfully scaffolded .env.example with {} variables.", vars.len()));
+                ok(&format!(
+                    "Successfully scaffolded .env.example with {} variables.",
+                    vars.len()
+                ));
             }
         }
 
@@ -1152,10 +1179,10 @@ Code:
                 fail("AI model not loaded.");
                 std::process::exit(1);
             });
-            
+
             let toml = std::fs::read_to_string("Cargo.toml").unwrap_or_default();
             sp.finish_and_clear();
-            
+
             let prompt = format!("Write a secure, multi-stage, distroless Dockerfile for this Rust project. Only output the raw Dockerfile.
 
 Cargo.toml:
@@ -1167,12 +1194,15 @@ Cargo.toml:
         }
 
         Commands::Score { file } => {
-            let sp = spinner(&format!("Calculating Cognitive Load Score for {}...", file.bold()));
+            let sp = spinner(&format!(
+                "Calculating Cognitive Load Score for {}...",
+                file.bold()
+            ));
             let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
                 fail("AI model not loaded.");
                 std::process::exit(1);
             });
-            
+
             if let Ok(content) = std::fs::read_to_string(&file) {
                 sp.finish_and_clear();
                 let prompt = format!("Grade this code based on Human Cognitive Load (readability, variable names, abstraction complexity) out of 100. Be ruthless. Suggest 3 improvements.
