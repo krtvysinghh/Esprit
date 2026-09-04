@@ -1,4 +1,5 @@
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::LazyLock;
 use std::time::Instant;
 
 pub struct Metrics {
@@ -9,7 +10,7 @@ pub struct Metrics {
 }
 
 impl Metrics {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             started: Instant::now(),
             restarts: AtomicU64::new(0),
@@ -47,4 +48,14 @@ impl Metrics {
     }
 }
 
-pub static METRICS: Metrics = Metrics::new();
+impl Default for Metrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub static METRICS: LazyLock<Metrics> = LazyLock::new(Metrics::new);
+
+pub fn metrics() -> &'static Metrics {
+    &METRICS
+}

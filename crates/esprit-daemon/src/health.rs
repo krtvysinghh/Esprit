@@ -1,4 +1,4 @@
-use crate::metrics::METRICS;
+use crate::metrics::metrics;
 
 pub struct Health {
     pub status: &'static str,
@@ -9,7 +9,7 @@ pub struct Health {
 pub fn status() -> Health {
     Health {
         status: "healthy",
-        uptime: METRICS.uptime(),
-        restarts: METRICS.restart_count(),
+        uptime: metrics().uptime(),
+        restarts: metrics().restart_count(),
     }
 }
