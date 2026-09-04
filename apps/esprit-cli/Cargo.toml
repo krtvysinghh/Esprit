@@ -41,3 +41,8 @@ esprit-vectors = { version = "0.1.0", path = "../../crates/esprit-vectors" }
 notify.workspace = true
 esprit-plugins = { version = "0.1.0", path = "../../crates/esprit-plugins" }
 esprit-embeddings = { version = "0.1.0", path = "../../crates/esprit-embeddings" }
+serde.workspace = true
+serde_json.workspace = true
+chrono = { workspace = true, features = ["serde"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+

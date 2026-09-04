@@ -1,71 +1,13 @@
 pub mod daemon;
+pub mod ui;
+pub mod updater;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use std::time::Instant;
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-fn spinner(msg: &str) -> ProgressBar {
-    let pb = ProgressBar::new_spinner();
-    pb.set_style(
-        ProgressStyle::with_template("  {spinner:.cyan} {msg}")
-            .unwrap()
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
-    );
-    pb.set_message(msg.to_string());
-    pb.enable_steady_tick(std::time::Duration::from_millis(80));
-    pb
-}
-
-#[allow(dead_code)]
-fn bar(len: u64, msg: &str) -> ProgressBar {
-    let pb = ProgressBar::new(len);
-    pb.set_style(
-        ProgressStyle::with_template(
-            "  {msg:.bold}  [{bar:40.cyan/black}]  {pos}/{len}  {elapsed}",
-        )
-        .unwrap()
-        .progress_chars("█▉▊▋▌▍▎▏ "),
-    );
-    pb.set_message(msg.to_string());
-    pb
-}
-
-fn ok(msg: &str) {
-    println!("  {} {}", "✓".green().bold(), msg);
-}
-
-fn fail(msg: &str) {
-    println!("  {} {}", "✗".red().bold(), msg);
-}
-
-fn warn(msg: &str) {
-    println!("  {} {}", "⚠".yellow().bold(), msg);
-}
-
-fn section(title: &str) {
-    println!("\n  {}", title.bold().underline());
-}
-
-fn divider() {
-    println!("  {}", "─".repeat(52).dimmed());
-}
-
-fn kv(key: &str, val: &str) {
-    println!("  {:<20} {}", key.dimmed(), val.bold());
-}
-
-fn elapsed(start: Instant) -> String {
-    let ms = start.elapsed().as_millis();
-    if ms < 1000 {
-        format!("{ms}ms")
-    } else {
-        format!("{:.1}s", start.elapsed().as_secs_f64())
-    }
-}
+pub use ui::{bar, divider, elapsed, fail, info, kv, ok, panel_header, section, spinner, warn};
 
 // ── CLI definition ────────────────────────────────────────────────────────────
 
@@ -88,6 +30,19 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Automatically update Esprit directly from GitHub
+    Update {
+        /// Force update and rebuild even if already on latest commit
+        #[arg(long, short)]
+        force: bool,
+
+        /// Check for updates without applying
+        #[arg(long, short)]
+        check: bool,
+    },
+
+    /// Show interactive welcome screen, command guide & live status
+    Welcome,
     /// Check system health and tool availability.
     Doctor,
 
@@ -132,7 +87,7 @@ enum Commands {
     /// Find source files missing test files
     /// Generate a natural language commit summary from git diff
     Diff,
-    
+
     /// macOS Omni-Agent: Natural Language OS Assistant
     Os {
         prompt: Vec<String>,
@@ -309,7 +264,125 @@ fn main() -> Result<()> {
     }
     esprit_telemetry::init()?;
 
+    // Non-intrusive background check for GitHub updates on command execution
+    if !matches!(cli.command, Commands::Update { .. }) {
+        updater::notify_if_available();
+    }
+
     match cli.command {
+        // ── update ───────────────────────────────────────────────────────────
+        Commands::Update { force, check } => {
+            if check {
+                ui::banner();
+                ui::panel_header("Update Status Check", Some("GitHub"));
+                let sp = ui::spinner("Querying GitHub for latest revisions…");
+                let info = updater::check_update(true);
+                sp.finish_and_clear();
+                match info {
+                    Some(u) if u.has_update => {
+                        ui::update_badge(
+                            &u.current_commit,
+                            &u.latest_commit,
+                            Some(&u.latest_message),
+                        );
+                        println!(
+                            "  Run {} to upgrade immediately.\n",
+                            "esprit update".bold().green()
+                        );
+                    }
+                    Some(u) => {
+                        ui::ok(&format!(
+                            "Esprit is up to date on commit {}.",
+                            u.current_commit.cyan().bold()
+                        ));
+                        println!("  Latest commit: {}\n", u.latest_message.dimmed());
+                    }
+                    None => {
+                        ui::warn("Could not reach GitHub API. Check your internet connection.\n");
+                    }
+                }
+            } else {
+                updater::execute_update(force)?;
+            }
+        }
+
+        // ── welcome ──────────────────────────────────────────────────────────
+        Commands::Welcome => {
+            ui::banner();
+            ui::panel_header("Welcome to Esprit AI", Some("Overview"));
+            ui::card(
+                "CORE CAPABILITIES",
+                &[
+                    format!(
+                        "{} {:<20} {}",
+                        "⚡".cyan(),
+                        "esprit ask <query>".bold(),
+                        "Ask questions about your entire codebase".dimmed()
+                    ),
+                    format!(
+                        "{} {:<20} {}",
+                        "🤖".magenta(),
+                        "esprit os <prompt>".bold(),
+                        "Offline macOS natural language assistant".dimmed()
+                    ),
+                    format!(
+                        "{} {:<20} {}",
+                        "🔍".green(),
+                        "esprit find <query>".bold(),
+                        "Semantic code search via vector embeddings".dimmed()
+                    ),
+                    format!(
+                        "{} {:<20} {}",
+                        "⚖️".yellow(),
+                        "esprit debate <topic>".bold(),
+                        "Multi-agent architecture debate (Sec vs Perf)".dimmed()
+                    ),
+                    format!(
+                        "{} {:<20} {}",
+                        "🩺".blue(),
+                        "esprit doctor".bold(),
+                        "Run full system & AI health diagnostic".dimmed()
+                    ),
+                    format!(
+                        "{} {:<20} {}",
+                        "🔄".cyan(),
+                        "esprit update".bold(),
+                        "Instant self-update directly from GitHub".dimmed()
+                    ),
+                ],
+            );
+            println!();
+            let model_count = esprit_models::list_status()
+                .unwrap_or_default()
+                .iter()
+                .filter(|(_, i)| *i)
+                .count();
+            let vector_count = esprit_vectors::count().unwrap_or(0);
+            let memory_count = esprit_memory::count().unwrap_or(0);
+
+            ui::panel_header("Live System State", Some("Local Cache"));
+            ui::kv_dot(
+                "Active Workspace",
+                &format!("{}", std::env::current_dir().unwrap_or_default().display()),
+            );
+            ui::kv_dot(
+                "Installed AI Models",
+                &format!("{} models ready", model_count),
+            );
+            ui::kv_dot(
+                "Indexed Code Vectors",
+                &format!("{} vectors in SQLite", vector_count),
+            );
+            ui::kv_dot(
+                "Conversation Lines",
+                &format!("{} stored in diary", memory_count),
+            );
+            println!(
+                "\n  {} Try running: {}\n",
+                "→".cyan().bold(),
+                "esprit doctor".bold().cyan()
+            );
+        }
         Commands::Os { prompt } => {
             let user_prompt = prompt.join(" ");
             let sp = spinner("Analyzing macOS intent...");
@@ -317,25 +390,34 @@ fn main() -> Result<()> {
                 fail("AI model not loaded.");
                 std::process::exit(1);
             });
-            
+
             let sys_prompt = format!(
                 "You are an expert macOS systems assistant. The user wants to: '{}'. \
                  Write a single valid bash command to achieve this on macOS (using mdfind, osascript, find, etc.). \
                  Rules: 1. Only output the raw command. 2. No markdown, no backticks, no explanations. 3. Be precise.",
                 user_prompt
             );
-            
+
             let mut cmd_str = ai.ask(&sys_prompt).unwrap_or_default().trim().to_string();
             cmd_str = cmd_str.trim_matches('`').trim().to_string();
             sp.finish_and_clear();
-            
-            println!("{} 🤖 Omni-Agent proposes: {}", "✨".cyan(), cmd_str.yellow().bold());
-            
-            let safe_prefixes = ["mdfind", "find", "ls", "cat", "echo", "pwd", "date", "whoami", "grep", "rg"];
+
+            println!(
+                "{} 🤖 Omni-Agent proposes: {}",
+                "✨".cyan(),
+                cmd_str.yellow().bold()
+            );
+
+            let safe_prefixes = [
+                "mdfind", "find", "ls", "cat", "echo", "pwd", "date", "whoami", "grep", "rg",
+            ];
             let is_safe = safe_prefixes.iter().any(|p| cmd_str.starts_with(p));
-            
+
             if !is_safe {
-                print!("{} ⚠️  Command may be mutating. Execute? [y/N]: ", "🛡️".red());
+                print!(
+                    "{} ⚠️  Command may be mutating. Execute? [y/N]: ",
+                    "🛡️".red()
+                );
                 use std::io::Write;
                 std::io::stdout().flush().unwrap();
                 let mut input = String::new();
@@ -345,24 +427,24 @@ fn main() -> Result<()> {
                     return Ok(());
                 }
             }
-            
+
             let sp_exec = spinner("Executing on macOS...");
             let output = std::process::Command::new("bash")
                 .arg("-c")
                 .arg(&cmd_str)
                 .output();
             sp_exec.finish_and_clear();
-            
+
             match output {
                 Ok(out) => {
                     let stdout = String::from_utf8_lossy(&out.stdout).to_string();
                     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                    
+
                     if stdout.trim().is_empty() && stderr.trim().is_empty() {
                         ok("Command executed successfully with no output.");
                         return Ok(());
                     }
-                    
+
                     let sp_format = spinner("Formatting results...");
                     let format_prompt = format!(
                         "The user asked: '{}'. The macOS command `{}` output:
@@ -372,15 +454,21 @@ STDERR:
 {}
 
 Summarize this output clearly and concisely in natural English for the user.",
-                        user_prompt, cmd_str, stdout.chars().take(3000).collect::<String>(), stderr.chars().take(1000).collect::<String>()
+                        user_prompt,
+                        cmd_str,
+                        stdout.chars().take(3000).collect::<String>(),
+                        stderr.chars().take(1000).collect::<String>()
                     );
-                    
+
                     let final_ans = ai.ask(&format_prompt).unwrap_or_default();
                     sp_format.finish_and_clear();
-                    
-                    println!("
+
+                    println!(
+                        "
 {}
-", final_ans.cyan());
+",
+                        final_ans.cyan()
+                    );
                 }
                 Err(e) => {
                     fail(&format!("Failed to execute command: {}", e));
@@ -395,29 +483,29 @@ Summarize this output clearly and concisely in natural English for the user.",
 
         // ── doctor ───────────────────────────────────────────────────────────
         Commands::Doctor => {
-            println!("{}", esprit_core::banner().cyan().bold());
-            let sp = spinner("Gathering system information…");
+            ui::banner();
+            let sp = ui::spinner("Gathering system & model telemetry…");
             let report = esprit_platform::doctor();
             sp.finish_and_clear();
 
-            section("System");
-            divider();
-            kv("OS", &report.os);
-            kv("Kernel", &report.kernel);
-            kv("Hostname", &report.hostname);
-            kv("CPU", &report.cpu);
-            kv("CPU Cores", &report.cpu_cores.to_string());
-            kv("RAM", &format!("{:.1} GB", report.ram_gb));
+            ui::panel_header("Host Architecture & Environment", Some("Hardware"));
+            ui::kv_dot("Operating System", &report.os);
+            ui::kv_dot("Kernel Version", &report.kernel);
+            ui::kv_dot("Host Architecture", &report.cpu);
+            ui::kv_dot(
+                "CPU Core Count",
+                &format!("{} logical cores", report.cpu_cores),
+            );
+            ui::kv_dot("System Memory", &format!("{:.1} GB RAM", report.ram_gb));
 
-            section("AI & Inference Engine");
-            divider();
+            ui::panel_header("AI Inference Engine", Some("Apple Silicon Metal"));
             #[cfg(target_os = "macos")]
-            kv(
+            ui::kv_dot(
                 "Inference Backend",
-                "Embedded llama.cpp (Apple Silicon Metal)",
+                "Embedded llama.cpp (Metal GPU Acceleration)",
             );
             #[cfg(not(target_os = "macos"))]
-            kv(
+            ui::kv_dot(
                 "Inference Backend",
                 "Embedded llama.cpp (Multi-threaded CPU)",
             );
@@ -426,14 +514,15 @@ Summarize this output clearly and concisely in natural English for the user.",
                 let installed: Vec<_> = models.into_iter().filter(|(_, inst)| *inst).collect();
                 if installed.is_empty() {
                     println!(
-                        "  {} No models installed yet — run: {}",
+                        "\n  {} No models installed yet — run: {}",
                         "⚠".yellow().bold(),
                         "esprit init".bold().cyan()
                     );
                 } else {
+                    println!();
                     for (entry, _) in installed {
                         println!(
-                            "  {} {:<14} {}",
+                            "  {} {:<16} {}",
                             "✓".green().bold(),
                             entry.id.bold(),
                             entry.display.dimmed()
@@ -442,46 +531,44 @@ Summarize this output clearly and concisely in natural English for the user.",
                 }
             }
 
-            section("Developer Tools");
-            divider();
+            ui::panel_header("Developer Toolchain Status", Some("CLI Tools"));
             let chk = |ok: bool, name: &str, ver: Option<&str>| {
                 if ok {
                     if let Some(v) = ver {
                         println!(
-                            "  {} {:<10} {}",
+                            "  {} {:<16} {}",
                             "✓".green().bold(),
                             name.bold(),
                             v.dimmed()
                         );
                     } else {
-                        println!("  {} {}", "✓".green().bold(), name.bold());
+                        println!("  {} {:<16}", "✓".green().bold(), name.bold());
                     }
                 } else {
                     println!(
-                        "  {} {:<10} {}",
+                        "  {} {:<16} {}",
                         "○".dimmed(),
                         name.dimmed(),
-                        "optional (not found)".dimmed()
+                        "not found (optional)".dimmed()
                     );
                 }
             };
-            chk(report.git, "Git", report.git_version.as_deref());
-            chk(report.rust, "Rust", report.rust_version.as_deref());
-            chk(report.cargo, "Cargo", None);
-            chk(report.ollama, "Ollama", report.ollama_version.as_deref());
+            chk(report.git, "git", report.git_version.as_deref());
+            chk(report.rust, "rustc", report.rust_version.as_deref());
+            chk(report.cargo, "cargo", None);
+            chk(report.ollama, "ollama", report.ollama_version.as_deref());
 
-            section("Index");
-            divider();
+            ui::panel_header("Knowledge Base & Index", Some("Tantivy / SQLite"));
             match esprit_index::index_stats() {
                 Ok(s) => {
-                    kv("Files indexed", &s.file_count.to_string());
-                    kv(
-                        "Total size",
+                    ui::kv_dot("Indexed Files", &s.file_count.to_string());
+                    ui::kv_dot(
+                        "Repository Size",
                         &format!("{:.1} MB", s.total_bytes as f64 / 1_048_576.0),
                     );
                 }
                 Err(_) => {
-                    warn("No index yet — run: esprit index <folder>");
+                    ui::warn("No index created yet. Run `esprit index .` to index workspace.");
                 }
             }
             println!();
