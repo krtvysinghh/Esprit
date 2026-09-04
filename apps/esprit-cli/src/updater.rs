@@ -10,7 +10,7 @@ use crate::ui;
 
 const GITHUB_REPO: &str = "krtvysinghh/Esprit";
 const API_URL: &str = "https://api.github.com/repos/krtvysinghh/Esprit/commits/main";
-const CACHE_TTL_SECS: u64 = 7200; // 2 hours
+const CACHE_TTL_SECS: u64 = 3600; // 1 hour
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateInfo {
@@ -39,20 +39,80 @@ fn cache_file() -> Result<PathBuf> {
     Ok(dir.join("update_cache.json"))
 }
 
-pub fn current_local_commit() -> String {
-    // Try git rev-parse HEAD first
-    if let Ok(out) = Command::new("git")
-        .args(["rev-parse", "--short=7", "HEAD"])
-        .output()
-    {
-        if out.status.success() {
-            let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-            if !s.is_empty() {
-                return s;
+pub fn find_repo_quick() -> Result<PathBuf> {
+    // 1. Check current dir & ancestors
+    let mut curr = std::env::current_dir().ok();
+    while let Some(dir) = curr {
+        if dir.join("apps/esprit-cli/Cargo.toml").exists() {
+            return Ok(dir);
+        }
+        curr = dir.parent().map(|p| p.to_path_buf());
+    }
+
+    // 2. Check candidate paths
+    if let Ok(home) = std::env::var("HOME") {
+        let home_path = PathBuf::from(home);
+        let candidates = [
+            home_path.join(".gemini/antigravity/scratch/Esprit"),
+            home_path.join("Projects/Esprit"),
+            home_path.join("Esprit"),
+            home_path.join(".esprit/source"),
+        ];
+        for path in candidates {
+            if path.join("apps/esprit-cli/Cargo.toml").exists() {
+                return Ok(path);
             }
         }
     }
-    // Fallback to embedded package version
+
+    Err(anyhow!("Could not locate local Esprit repository"))
+}
+
+pub fn find_or_clone_repo() -> Result<PathBuf> {
+    if let Ok(dir) = find_repo_quick() {
+        return Ok(dir);
+    }
+
+    // Clone to ~/.esprit/source
+    if let Ok(home) = std::env::var("HOME") {
+        let target = PathBuf::from(home).join(".esprit/source");
+        if !target.exists() {
+            let _ = fs::create_dir_all(&target);
+            let _ = Command::new("git")
+                .args([
+                    "clone",
+                    "--depth",
+                    "1",
+                    "https://github.com/krtvysinghh/Esprit.git",
+                    target.to_str().unwrap(),
+                ])
+                .output();
+        }
+        if target.join("apps/esprit-cli/Cargo.toml").exists() {
+            return Ok(target);
+        }
+    }
+
+    Err(anyhow!(
+        "Could not locate or clone Esprit repository from GitHub"
+    ))
+}
+
+pub fn current_local_commit() -> String {
+    if let Ok(repo_dir) = find_repo_quick() {
+        if let Ok(out) = Command::new("git")
+            .current_dir(&repo_dir)
+            .args(["rev-parse", "--short=7", "HEAD"])
+            .output()
+        {
+            if out.status.success() {
+                let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                if !s.is_empty() {
+                    return s;
+                }
+            }
+        }
+    }
     format!("v{}", env!("CARGO_PKG_VERSION"))
 }
 
@@ -92,10 +152,7 @@ pub fn check_update(force_network: bool) -> Option<UpdateInfo> {
         .unwrap_or("Latest commit")
         .to_string();
 
-    let has_update = !current_sha.is_empty()
-        && !latest_sha.is_empty()
-        && current_sha != latest_sha
-        && !current_sha.starts_with('v');
+    let has_update = !current_sha.is_empty() && !latest_sha.is_empty() && current_sha != latest_sha;
 
     let info = UpdateInfo {
         current_commit: current_sha,
@@ -173,30 +230,37 @@ pub fn execute_update(force: bool) -> Result<()> {
     );
     println!();
 
-    // Step 1: Git Fetch & Pull
-    ui::step(1, 3, "Pulling latest changes from GitHub...");
-    let sp_pull = ui::spinner("Fetching and fast-forwarding origin/main…");
+    // Step 1: Locate or clone repository & pull latest
+    ui::step(
+        1,
+        3,
+        "Locating workspace and pulling latest changes from GitHub...",
+    );
+    let sp_pull = ui::spinner("Syncing repository from origin/main…");
+    let repo_dir = find_or_clone_repo()?;
     let pull_res = Command::new("git")
+        .current_dir(&repo_dir)
         .args(["pull", "--ff-only", "origin", "main"])
         .output();
     sp_pull.finish_and_clear();
 
     match pull_res {
         Ok(out) if out.status.success() => {
-            ui::ok("Repository fast-forwarded successfully.");
+            ui::ok(&format!(
+                "Repository synced at {}",
+                repo_dir.display().to_string().dimmed()
+            ));
         }
         Ok(out) => {
             let err = String::from_utf8_lossy(&out.stderr);
-            ui::warn(&format!("Git pull returned warning: {}", err.trim()));
-            println!(
-                "  {} Attempting cargo build with existing workspace...",
-                "•".dimmed()
-            );
+            if err.contains("Already up to date") || err.is_empty() {
+                ui::ok("Repository is already up to date.");
+            } else {
+                ui::warn(&format!("Git notice: {}", err.trim()));
+            }
         }
         Err(e) => {
-            ui::warn(&format!(
-                "Git command unavailable ({e}). Continuing with cargo compile..."
-            ));
+            ui::warn(&format!("Git notice: {e}"));
         }
     }
 
@@ -204,6 +268,7 @@ pub fn execute_update(force: bool) -> Result<()> {
     ui::step(2, 3, "Compiling and optimizing release binary...");
     let sp_build = ui::spinner("Building esprit binary (opt-level=3, thin-lto)…");
     let build_res = Command::new("cargo")
+        .current_dir(&repo_dir)
         .args(["build", "--release", "-p", "esprit-cli"])
         .output();
     sp_build.finish_and_clear();
@@ -211,12 +276,15 @@ pub fn execute_update(force: bool) -> Result<()> {
     match build_res {
         Ok(out) if out.status.success() => {
             ui::ok("Compiled release binary successfully.");
-            // Install to ~/.cargo/bin and current executable path
+            // Install to ~/.cargo/bin/esprit
             if let Ok(home) = std::env::var("HOME") {
-                let cargo_bin = std::path::PathBuf::from(home).join(".cargo").join("bin").join("esprit");
-                let target_bin = std::path::PathBuf::from("target/release/esprit");
+                let cargo_bin = PathBuf::from(home)
+                    .join(".cargo")
+                    .join("bin")
+                    .join("esprit");
+                let target_bin = repo_dir.join("target").join("release").join("esprit");
                 if target_bin.exists() {
-                    let _ = std::fs::copy(&target_bin, &cargo_bin);
+                    let _ = fs::copy(&target_bin, &cargo_bin);
                 }
             }
         }
