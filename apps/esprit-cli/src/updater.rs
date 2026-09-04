@@ -211,6 +211,14 @@ pub fn execute_update(force: bool) -> Result<()> {
     match build_res {
         Ok(out) if out.status.success() => {
             ui::ok("Compiled release binary successfully.");
+            // Install to ~/.cargo/bin and current executable path
+            if let Ok(home) = std::env::var("HOME") {
+                let cargo_bin = std::path::PathBuf::from(home).join(".cargo").join("bin").join("esprit");
+                let target_bin = std::path::PathBuf::from("target/release/esprit");
+                if target_bin.exists() {
+                    let _ = std::fs::copy(&target_bin, &cargo_bin);
+                }
+            }
         }
         Ok(out) => {
             let err = String::from_utf8_lossy(&out.stderr);

@@ -25,7 +25,7 @@ struct Cli {
     verbose: bool,
 
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -264,12 +264,14 @@ fn main() -> Result<()> {
     }
     esprit_telemetry::init()?;
 
+    let command = cli.command.unwrap_or(Commands::Welcome);
+
     // Non-intrusive background check for GitHub updates on command execution
-    if !matches!(cli.command, Commands::Update { .. }) {
+    if !matches!(command, Commands::Update { .. }) {
         updater::notify_if_available();
     }
 
-    match cli.command {
+    match command {
         // ── update ───────────────────────────────────────────────────────────
         Commands::Update { force, check } => {
             if check {
