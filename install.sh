@@ -93,7 +93,7 @@ if curl -fsSL "$RELEASE_URL" -o "$TMP_DIR/esprit.tar.gz" 2>/dev/null; then
   echo -e "  ${GREEN}✓ Installed ${BIN_NAME} to ${INSTALL_DIR}/${BIN_NAME}${RESET}"
 elif command -v cargo >/dev/null 2>&1; then
   echo -e "  ${YELLOW}Release asset not yet available for ${TARGET}; building via cargo...${RESET}"
-  cargo install --git "https://github.com/${REPO}" --bin esprit --root "$HOME/.cargo"
+  cargo install --git "https://github.com/${REPO}" esprit-cli --bin esprit --root "$HOME/.cargo"
   echo -e "  ${GREEN}✓ Built and installed via Cargo${RESET}"
 else
   echo -e "  ${YELLOW}Note: Pre-compiled binary release will be fetched upon official release.${RESET}"
