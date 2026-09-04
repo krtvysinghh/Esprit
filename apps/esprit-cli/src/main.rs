@@ -132,6 +132,11 @@ enum Commands {
     /// Find source files missing test files
     /// Generate a natural language commit summary from git diff
     Diff,
+    
+    /// macOS Omni-Agent: Natural Language OS Assistant
+    Os {
+        prompt: Vec<String>,
+    },
 
     /// Offline Code Reviewer for staged changes
     Review,
@@ -305,6 +310,84 @@ fn main() -> Result<()> {
     esprit_telemetry::init()?;
 
     match cli.command {
+        Commands::Os { prompt } => {
+            let user_prompt = prompt.join(" ");
+            let sp = spinner("Analyzing macOS intent...");
+            let ai = esprit_ai::Ai::default_model().unwrap_or_else(|_| {
+                fail("AI model not loaded.");
+                std::process::exit(1);
+            });
+            
+            let sys_prompt = format!(
+                "You are an expert macOS systems assistant. The user wants to: '{}'. \
+                 Write a single valid bash command to achieve this on macOS (using mdfind, osascript, find, etc.). \
+                 Rules: 1. Only output the raw command. 2. No markdown, no backticks, no explanations. 3. Be precise.",
+                user_prompt
+            );
+            
+            let mut cmd_str = ai.ask(&sys_prompt).unwrap_or_default().trim().to_string();
+            cmd_str = cmd_str.trim_matches('`').trim().to_string();
+            sp.finish_and_clear();
+            
+            println!("{} 🤖 Omni-Agent proposes: {}", "✨".cyan(), cmd_str.yellow().bold());
+            
+            let safe_prefixes = ["mdfind", "find", "ls", "cat", "echo", "pwd", "date", "whoami", "grep", "rg"];
+            let is_safe = safe_prefixes.iter().any(|p| cmd_str.starts_with(p));
+            
+            if !is_safe {
+                print!("{} ⚠️  Command may be mutating. Execute? [y/N]: ", "🛡️".red());
+                use std::io::Write;
+                std::io::stdout().flush().unwrap();
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input).unwrap();
+                if input.trim().to_lowercase() != "y" {
+                    fail("Execution aborted by user.");
+                    return Ok(());
+                }
+            }
+            
+            let sp_exec = spinner("Executing on macOS...");
+            let output = std::process::Command::new("bash")
+                .arg("-c")
+                .arg(&cmd_str)
+                .output();
+            sp_exec.finish_and_clear();
+            
+            match output {
+                Ok(out) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
+                    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+                    
+                    if stdout.trim().is_empty() && stderr.trim().is_empty() {
+                        ok("Command executed successfully with no output.");
+                        return Ok(());
+                    }
+                    
+                    let sp_format = spinner("Formatting results...");
+                    let format_prompt = format!(
+                        "The user asked: '{}'. The macOS command `{}` output:
+STDOUT:
+{}
+STDERR:
+{}
+
+Summarize this output clearly and concisely in natural English for the user.",
+                        user_prompt, cmd_str, stdout.chars().take(3000).collect::<String>(), stderr.chars().take(1000).collect::<String>()
+                    );
+                    
+                    let final_ans = ai.ask(&format_prompt).unwrap_or_default();
+                    sp_format.finish_and_clear();
+                    
+                    println!("
+{}
+", final_ans.cyan());
+                }
+                Err(e) => {
+                    fail(&format!("Failed to execute command: {}", e));
+                }
+            }
+        }
+
         // ── version ──────────────────────────────────────────────────────────
         Commands::Version => {
             println!("{}", esprit_core::banner().cyan().bold());
